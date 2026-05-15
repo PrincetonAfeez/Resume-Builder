@@ -1,0 +1,11 @@
+# Web service (main app). WeasyPrint libs: nixpacks.toml
+# Prune cron: duplicate service using railway.prune.toml / Procfile `prune`
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+releaseCommand = "python manage.py migrate --noinput && python manage.py check_production_runtime"
+startCommand = "gunicorn resume_builder.wsgi:application --bind 0.0.0.0:$PORT"
+healthcheckPath = "/health/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
