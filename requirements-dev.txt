@@ -1,0 +1,18 @@
+-r requirements.txt
+
+# Formatting & lint
+black>=25.0,<27.0
+isort>=6.0,<7.0
+ruff>=0.12,<1.0
+
+# Types
+django-stubs>=5.2,<6.0
+mypy>=1.17,<2.0
+
+# Tests (unit: pytest -m "not e2e and not weasyprint")
+pytest>=8.4,<10.0
+pytest-cov>=6.2,<8.0
+pytest-django>=4.11,<5.0
+
+# E2E & README screenshots (linux-integration CI / local)
+playwright>=1.49,<2.0
