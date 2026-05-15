@@ -1,0 +1,19 @@
+# Web framework
+Django>=6.0,<6.1
+django-environ>=0.12,<1.0
+
+# HTTP / WSGI
+gunicorn>=23.0,<24.0
+whitenoise>=6.9,<7.0
+
+# Database (PostgreSQL in production)
+psycopg[binary]>=3.2,<4.0
+
+# Resume export & analysis
+python-docx>=1.1,<2.0
+weasyprint>=66.0,<67.0
+scikit-learn>=1.7,<2.0
+
+# Operations
+django-ratelimit>=4.1,<5.0
+sentry-sdk>=2.0,<3.0
