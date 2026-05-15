@@ -1,0 +1,46 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Test & type tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+playwright-report/
+test-results/
+.playwright/
+
+# Logs
+*.log
+server.err.log
+server.out.log
+
+# Editor / agent worktrees
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Keep docs/screenshots/ tracked for README previews
