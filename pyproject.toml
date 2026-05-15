@@ -1,0 +1,71 @@
+[project]
+name = "resume-builder"
+version = "1.0.0"
+description = "Session-only resume builder with HTMX editing and PDF export"
+readme = "README.md"
+requires-python = ">=3.14"
+
+[tool.black]
+line-length = 119
+target-version = ["py314"]
+
+[tool.isort]
+profile = "black"
+line_length = 119
+skip = ["migrations"]
+
+[tool.ruff]
+line-length = 119
+target-version = "py314"
+exclude = [
+    ".venv",
+    ".claude",
+    "migrations",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ"]
+ignore = ["DJ008"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "resume_builder.settings.dev"
+python_files = ["test_*.py", "*_test.py"]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "-ra"]
+markers = [
+    "e2e: browser tests using Playwright and live_server",
+    "weasyprint: requires WeasyPrint native libraries (Linux CI)",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["resumes"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "resumes/demo.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
+[tool.mypy]
+python_version = "3.14"
+plugins = ["mypy_django_plugin.main"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_return_any = false
+check_untyped_defs = true
+
+[tool.django-stubs]
+django_settings_module = "resume_builder.settings.dev"
+
+[[tool.mypy.overrides]]
+module = "resumes.services.*"
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
