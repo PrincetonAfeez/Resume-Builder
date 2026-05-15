@@ -1,0 +1,9 @@
+# Dedicated Railway cron service (duplicate this repo as a second service).
+# Settings → Deploy: use this config root or mirror these values in the UI.
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "python manage.py prune_stale_profiles"
+# Set in Railway UI → Settings → Cron Schedule (UTC), e.g. daily at 03:00:
+# cronSchedule = "0 3 * * *"
