@@ -1,0 +1,42 @@
+<article class="resume-theme modern accent-{{ profile.accent_color }} font-{{ profile.font_pairing }}">
+  <header class="modern-header">
+    <h1>{{ profile.full_name|default:"Your Name" }}</h1>
+    <p>{{ profile.email }}{% if profile.phone %} | {{ profile.phone }}{% endif %}{% if profile.location %} | {{ profile.location }}{% endif %}</p>
+  </header>
+  <div class="modern-grid">
+    <main>
+      {% if profile.professional_summary %}
+        <section><h2>Profile</h2><p>{{ profile.professional_summary }}</p></section>
+      {% endif %}
+      {% if experiences %}
+        <section>
+          <h2>Experience</h2>
+          {% for experience in experiences %}
+            <div class="resume-item">
+              <div class="resume-line"><strong>{{ experience.title }}</strong><span>{{ experience.date_range }}</span></div>
+              <p>{{ experience.company }}{% if experience.location %} | {{ experience.location }}{% endif %}</p>
+              <ul>{% for achievement in experience.achievements.all %}<li>{{ achievement.text }}</li>{% endfor %}</ul>
+            </div>
+          {% endfor %}
+        </section>
+      {% endif %}
+      {% if education %}
+        <section>
+          <h2>Education</h2>
+          {% for item in education %}<p><strong>{{ item.institution }}</strong><br>{{ item.degree }} {{ item.field }}<br>{{ item.date_range }}</p>{% endfor %}
+        </section>
+      {% endif %}
+    </main>
+    <aside>
+      {% if profile.linkedin_url or profile.portfolio_url %}
+        <section><h2>Links</h2><p>{{ profile.linkedin_url }}</p><p>{{ profile.portfolio_url }}</p></section>
+      {% endif %}
+      {% if skills %}
+        <section><h2>Skills</h2>{% for skill in skills %}<p class="skill-line">{{ skill.name }} <span>{{ skill.proficiency }}/5</span></p>{% endfor %}</section>
+      {% endif %}
+      {% if certifications %}
+        <section><h2>Certifications</h2>{% for item in certifications %}<p><strong>{{ item.name }}</strong><br>{{ item.issuing_body }}</p>{% endfor %}</section>
+      {% endif %}
+    </aside>
+  </div>
+</article>

@@ -1,0 +1,29 @@
+<article class="resume-theme minimal accent-{{ profile.accent_color }} font-{{ profile.font_pairing }}">
+  <header class="minimal-header">
+    <h1>{{ profile.full_name|default:"Your Name" }}</h1>
+    <p>{{ profile.email }}{% if profile.phone %} / {{ profile.phone }}{% endif %}{% if profile.location %} / {{ profile.location }}{% endif %}</p>
+  </header>
+  {% if profile.professional_summary %}<section class="minimal-summary"><p>{{ profile.professional_summary }}</p></section>{% endif %}
+  {% if experiences %}
+    <section>
+      <h2>Selected Experience</h2>
+      {% for experience in experiences %}
+        <div class="resume-item">
+          <div class="resume-line"><strong>{{ experience.title }}, {{ experience.company }}</strong><span>{{ experience.date_range }}</span></div>
+          <ul>{% for achievement in experience.achievements.all %}<li>{{ achievement.text }}</li>{% endfor %}</ul>
+        </div>
+      {% endfor %}
+    </section>
+  {% endif %}
+  <div class="minimal-grid">
+    {% if education %}
+      <section><h2>Education</h2>{% for item in education %}<p><strong>{{ item.institution }}</strong><br>{{ item.degree }} {{ item.field }}</p>{% endfor %}</section>
+    {% endif %}
+    {% if skills %}
+      <section><h2>Skills</h2><p>{% for skill in skills %}{{ skill.name }}{% if not forloop.last %} / {% endif %}{% endfor %}</p></section>
+    {% endif %}
+    {% if certifications %}
+      <section><h2>Credentials</h2>{% for item in certifications %}<p>{{ item.name }}{% if item.issuing_body %}, {{ item.issuing_body }}{% endif %}</p>{% endfor %}</section>
+    {% endif %}
+  </div>
+</article>

@@ -1,0 +1,37 @@
+<article class="resume-theme classic accent-{{ profile.accent_color }} font-{{ profile.font_pairing }}">
+  <header class="resume-header">
+    <h1>{{ profile.full_name|default:"Your Name" }}</h1>
+    <p>{{ profile.email }}{% if profile.phone %} | {{ profile.phone }}{% endif %}{% if profile.location %} | {{ profile.location }}{% endif %}</p>
+    <p>{% if profile.linkedin_url %}{{ profile.linkedin_url }}{% endif %}{% if profile.portfolio_url %} | {{ profile.portfolio_url }}{% endif %}</p>
+  </header>
+  {% if profile.professional_summary %}
+    <section><h2>Summary</h2><p>{{ profile.professional_summary }}</p></section>
+  {% endif %}
+  {% if experiences %}
+    <section>
+      <h2>Experience</h2>
+      {% for experience in experiences %}
+        <div class="resume-item">
+          <div class="resume-line"><strong>{{ experience.title }}</strong><span>{{ experience.date_range }}</span></div>
+          <div class="resume-line"><em>{{ experience.company }}</em><span>{{ experience.location }}</span></div>
+          <ul>{% for achievement in experience.achievements.all %}<li>{{ achievement.text }}</li>{% endfor %}</ul>
+        </div>
+      {% endfor %}
+    </section>
+  {% endif %}
+  {% if education %}
+    <section>
+      <h2>Education</h2>
+      {% for item in education %}
+        <div class="resume-line"><strong>{{ item.institution }}</strong><span>{{ item.date_range }}</span></div>
+        <p>{{ item.degree }}{% if item.field %}, {{ item.field }}{% endif %}{% if item.gpa %} | GPA {{ item.gpa }}{% endif %}</p>
+      {% endfor %}
+    </section>
+  {% endif %}
+  {% if skills %}
+    <section><h2>Skills</h2><p>{% for skill in skills %}{{ skill.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p></section>
+  {% endif %}
+  {% if certifications %}
+    <section><h2>Certifications</h2>{% for item in certifications %}<p><strong>{{ item.name }}</strong>{% if item.issuing_body %}, {{ item.issuing_body }}{% endif %}</p>{% endfor %}</section>
+  {% endif %}
+</article>
