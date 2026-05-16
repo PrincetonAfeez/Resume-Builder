@@ -5,8 +5,12 @@ from __future__ import annotations
 import logging
 from enum import StrEnum
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
+from django.conf import settings
+from django.contrib.staticfiles import finders
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.template.loader import render_to_string
 
 from resumes.models import Profile, Theme
@@ -61,13 +65,36 @@ def export_resume(profile: Profile, theme: str, format: ExportFormat) -> bytes:
     raise ValueError(f"Unsupported export format: {format}")
 
 
+def resolve_pdf_stylesheet_uri() -> str | None:
+    """Return a file:// URI to app.css for WeasyPrint (dev finder or collected STATIC_ROOT)."""
+
+    css_path = finders.find("resumes/css/app.css")
+    if css_path:
+        return Path(css_path).resolve().as_uri()
+
+    try:
+        stored = staticfiles_storage.path("resumes/css/app.css")
+    except (AttributeError, NotImplementedError, ValueError):
+        stored = None
+    if stored:
+        path = Path(stored)
+        if path.is_file():
+            return path.resolve().as_uri()
+
+    collected = Path(settings.STATIC_ROOT) / "resumes" / "css" / "app.css"
+    if collected.is_file():
+        return collected.resolve().as_uri()
+
+    return None
+
+
 def weasyprint_runtime_available() -> bool:
     """Return True when WeasyPrint can render PDFs with native libraries installed."""
 
     try:
         from weasyprint import HTML
 
-        HTML(string="<p>ok</p>", base_url=".").write_pdf()
+        HTML(string="<p>ok</p>", base_url=str(settings.BASE_DIR)).write_pdf()
     except OSError:
         return False
     return True
@@ -78,8 +105,13 @@ def export_pdf(context: dict[str, Any]) -> bytes:
     try:
         from weasyprint import HTML
 
-        html = render_to_string("resumes/export_pdf.html", context)
-        pdf = HTML(string=html, base_url=".").write_pdf()
+        pdf_context = {
+            **context,
+            "pdf_stylesheet_href": resolve_pdf_stylesheet_uri(),
+        }
+        html = render_to_string("resumes/export_pdf.html", pdf_context)
+        base_url = Path(settings.BASE_DIR).resolve().as_uri()
+        pdf = HTML(string=html, base_url=base_url).write_pdf()
         logger.info("pdf_export renderer=weasyprint theme=%s bytes=%s", theme, len(pdf))
         return pdf
     except OSError as exc:

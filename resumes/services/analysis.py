@@ -139,10 +139,31 @@ def completeness_score(profile: Profile) -> CompletenessResult:
     return CompletenessResult(sum(points for _label, points, passed in checks if passed), checks)
 
 
+def tokenize_for_matching(text: str) -> set[str]:
+    """Normalized single tokens and adjacent bigrams for exact keyword matching."""
+
+    words = [
+        word
+        for word in re.findall(r"[a-z0-9]+(?:[+#.-][a-z0-9]+)*", text.lower())
+        if len(word) >= 2 and word not in STOPWORDS
+    ]
+    tokens = set(words)
+    for index in range(len(words) - 1):
+        tokens.add(f"{words[index]} {words[index + 1]}")
+    return tokens
+
+
+def keyword_present_in_resume(keyword: str, resume_tokens: set[str]) -> bool:
+    normalized = keyword.lower().strip()
+    if not normalized:
+        return False
+    return normalized in resume_tokens
+
+
 def analyze_job_description(profile: Profile, jd_text: str, top_n: int = 20) -> KeywordAnalysis:
     keywords = extract_keywords(jd_text, top_n=top_n)
-    resume_text = profile_resume_text(profile).lower()
-    present = [keyword for keyword in keywords if keyword.lower() in resume_text]
+    resume_tokens = tokenize_for_matching(profile_resume_text(profile))
+    present = [keyword for keyword in keywords if keyword_present_in_resume(keyword, resume_tokens)]
     missing = [keyword for keyword in keywords if keyword not in present]
     match = round((len(present) / len(keywords)) * 100) if keywords else 0
     return KeywordAnalysis(present=present, missing=missing, match_percentage=match)

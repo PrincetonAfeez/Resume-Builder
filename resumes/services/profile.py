@@ -52,7 +52,10 @@ def get_or_create_profile(request: ProfileRequest) -> Profile:
 
 
 def next_order(queryset: QuerySet[Any]) -> int:
-    current = queryset.aggregate(max_order=Max("order"))["max_order"]
+    """Return the next order value; call inside transaction.atomic() before create."""
+
+    locked = queryset.select_for_update()
+    current = locked.aggregate(max_order=Max("order"))["max_order"]
     return int(current or 0) + 1
 
 
