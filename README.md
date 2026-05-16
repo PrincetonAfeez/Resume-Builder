@@ -10,7 +10,8 @@ Session-only resume builder for quickly creating one polished resume in a browse
 - Three layout themes (Classic, Modern, Minimal) with accent colors and font pairings.
 - Undo last change and start over; first-visit notice explains the session-only model.
 - Export formats: PDF via WeasyPrint (uses your selected theme), DOCX via python-docx (structured plain export; themes apply to PDF only), and ATS-friendly plain text.
-- JD analyzer at `/resume/analyze/` with TF-IDF keywords, present/missing keyword groups, and match percentage.
+- JD analyzer at `/resume/analyze/` with TF-IDF keywords, token-based present/missing groups, and match percentage.
+- Vendored frontend assets (Tailwind, HTMX, Lucide) served from static files, not public CDNs.
 - Rate limits on exports and analyzer runs (30/hour per session).
 - Bullet quality warnings and action verb suggestions.
 - Completeness score with a transparent rule breakdown.
@@ -55,8 +56,12 @@ GitHub Actions runs two jobs: **checks** (lint, types, fast unit tests) and **li
 
 ```powershell
 python manage.py check
-python manage.py check_production_runtime
 python -m pytest -m "not e2e and not weasyprint"
+```
+
+`check_production_runtime` requires WeasyPrint native libraries (runs in CI **linux-integration** and on Railway release). On Windows without those libs it exits with an error.
+
+```powershell
 python -m pytest -m "weasyprint or e2e"
 python -m ruff check .
 python -m black --check .
@@ -92,20 +97,22 @@ The command exits when finished so Railway can schedule the next run.
 Required Railway environment variables:
 
 - `DJANGO_SETTINGS_MODULE=resume_builder.settings.prod`
-- `SECRET_KEY`
+- `SECRET_KEY` (must not be the dev default `dev-only-change-me`; production settings fail fast if it is)
 - `DATABASE_URL`
 - `ALLOWED_HOSTS`
 - `CSRF_TRUSTED_ORIGINS`
 - Optional: `SENTRY_DSN`, `LOG_LEVEL`, `SENTRY_TRACES_SAMPLE_RATE`
 
-The app includes `Procfile`, `railway.toml`, `railway.prune.toml`, `nixpacks.toml` (WeasyPrint system libraries), WhiteNoise static serving, a `/health/` endpoint, and a release command that runs migrations plus `check_production_runtime`.
+The app includes `Procfile`, `railway.toml`, `railway.prune.toml`, `nixpacks.toml` (WeasyPrint system libraries), vendored UI assets under `resumes/static/resumes/vendor/`, WhiteNoise static serving, a `/health/` endpoint, and a release command that runs `collectstatic`, migrations, and `check_production_runtime`.
+
+Rebuild vendor assets after UI changes: run `scripts/vendor_frontend_assets.py` for JS; rebuild Tailwind from `frontend/` (see ADR 0010 in `docs/adr/`).
 
 ### Confirm WeasyPrint in production logs
 
 After deploy, check **Release Logs** for:
 
-- `production_runtime weasyprint=available` — themed PDF export is ready
-- `production_runtime weasyprint=fallback_only` — install native libs (`nixpacks.toml` should provide them on Railway)
+- `production_runtime weasyprint=available` — release succeeded; themed PDF export is ready
+- Failed release with `WeasyPrint native runtime is unavailable` — fix `nixpacks.toml` / platform packages and redeploy
 
 On **web service startup** (first request after deploy), look for:
 
@@ -132,7 +139,7 @@ python scripts/generate_readme_screenshots.py
 
 ## V1 Scope
 
-Included: one session profile, inline editing, undo/start over, themes (layout, accent, font), exports, analyzer, bullet warnings, action verbs, ~75 tests (unit + E2E + WeasyPrint on Linux), ADRs in `docs/adr/`, and Railway prep.
+Included: one session profile, inline editing, undo/start over, themes (layout, accent, font), exports, analyzer, bullet warnings, action verbs, vendored frontend assets, ~82 tests (unit + E2E + WeasyPrint on Linux), ADRs in `docs/adr/` (see `resume_builder_docs.md` Document 1), and Railway prep.
 
 Deferred to v2: accounts, multiple resumes, resume duplication, share links, cover letters, job tracking, LinkedIn import, analytics, real-time collaboration, and LLM-powered features.
 
