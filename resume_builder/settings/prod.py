@@ -12,7 +12,9 @@ from .base import *  # noqa: F403
 from .base import env
 
 DEBUG = False
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env.str("SECRET_KEY")
+if SECRET_KEY == "dev-only-change-me":
+    raise RuntimeError("SECRET_KEY must be set in production")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[".railway.app"])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
