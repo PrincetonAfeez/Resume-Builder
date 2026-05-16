@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/resume-builder/education.schema.json",
+  "title": "Education",
+  "description": "One ordered education entry for a profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "institution": {
+      "type": "string",
+      "maxLength": 160,
+      "default": ""
+    },
+    "degree": {
+      "type": "string",
+      "maxLength": 160,
+      "default": ""
+    },
+    "field": {
+      "type": "string",
+      "maxLength": 160,
+      "default": ""
+    },
+    "start_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "end_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "gpa": {
+      "type": "string",
+      "maxLength": 20,
+      "default": ""
+    },
+    "notes": {
+      "type": "string",
+      "default": ""
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

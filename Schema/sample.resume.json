@@ -1,0 +1,70 @@
+{
+  "profile": {
+    "session_key": "example-session-key",
+    "full_name": "Jordan Taylor",
+    "email": "jordan@example.com",
+    "phone": "555-0100",
+    "location": "San Francisco, CA",
+    "linkedin_url": "https://www.linkedin.com/in/jordantaylor",
+    "portfolio_url": "https://jordantaylor.dev",
+    "professional_summary": "Frontend developer focused on accessible, responsive web applications.",
+    "chosen_theme": "modern",
+    "accent_color": "blue",
+    "font_pairing": "sans",
+    "jd_text": "",
+    "first_visit_notice_seen": true
+  },
+  "experiences": [
+    {
+      "order": 0,
+      "company": "Example Co.",
+      "title": "Frontend Developer",
+      "location": "Remote",
+      "start_date": "2024-01-01",
+      "end_date": null,
+      "current_role": true,
+      "achievements": [
+        {
+          "order": 0,
+          "text": "Built reusable UI components that reduced page build time by 30%."
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "order": 0,
+      "institution": "Example University",
+      "degree": "B.S.",
+      "field": "Computer Science",
+      "start_date": "2020-08-01",
+      "end_date": "2024-05-01",
+      "gpa": "3.8",
+      "notes": "Dean's List"
+    }
+  ],
+  "skills": [
+    {
+      "order": 0,
+      "name": "Python",
+      "category": "technical",
+      "proficiency": 4
+    },
+    {
+      "order": 1,
+      "name": "Communication",
+      "category": "soft",
+      "proficiency": 5
+    }
+  ],
+  "certifications": [
+    {
+      "order": 0,
+      "name": "AWS Certified Cloud Practitioner",
+      "issuing_body": "Amazon Web Services",
+      "date_earned": "2025-03-01",
+      "expiry": "2028-03-01",
+      "credential_id": "ABC-123"
+    }
+  ]
+}

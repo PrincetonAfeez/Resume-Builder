@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/resume-builder/certification.schema.json",
+  "title": "Certification",
+  "description": "One ordered certification entry for a profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 160,
+      "default": ""
+    },
+    "issuing_body": {
+      "type": "string",
+      "maxLength": 160,
+      "default": ""
+    },
+    "date_earned": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "expiry": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "credential_id": {
+      "type": "string",
+      "maxLength": 120,
+      "default": ""
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/resume-builder/experience.schema.json",
+  "title": "Experience",
+  "description": "One ordered professional experience entry for a profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "company": {
+      "type": "string",
+      "maxLength": 160,
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 160,
+      "default": ""
+    },
+    "location": {
+      "type": "string",
+      "maxLength": 120,
+      "default": ""
+    },
+    "start_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "end_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "current_role": {
+      "type": "boolean",
+      "default": false
+    },
+    "achievements": {
+      "type": "array",
+      "items": {
+        "$ref": "achievement.schema.json"
+      },
+      "default": []
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

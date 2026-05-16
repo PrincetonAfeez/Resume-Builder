@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/resume-builder/skill.schema.json",
+  "title": "Skill",
+  "description": "One ordered skill entry for a profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 120,
+      "default": ""
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "technical",
+        "language",
+        "soft"
+      ],
+      "default": "technical"
+    },
+    "proficiency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 3
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

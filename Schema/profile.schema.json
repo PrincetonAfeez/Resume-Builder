@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/resume-builder/profile.schema.json",
+  "title": "Profile",
+  "description": "Session-scoped resume profile used by the Resume Builder app.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "session_key": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "full_name": {
+      "type": "string",
+      "maxLength": 140,
+      "default": ""
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "default": ""
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 40,
+      "default": ""
+    },
+    "location": {
+      "type": "string",
+      "maxLength": 120,
+      "default": ""
+    },
+    "linkedin_url": {
+      "type": "string",
+      "format": "uri",
+      "default": ""
+    },
+    "portfolio_url": {
+      "type": "string",
+      "format": "uri",
+      "default": ""
+    },
+    "professional_summary": {
+      "type": "string",
+      "default": ""
+    },
+    "chosen_theme": {
+      "type": "string",
+      "enum": [
+        "classic",
+        "modern",
+        "minimal"
+      ],
+      "default": "classic"
+    },
+    "accent_color": {
+      "type": "string",
+      "enum": [
+        "slate",
+        "blue",
+        "emerald",
+        "rose",
+        "amber",
+        "violet",
+        "cyan",
+        "stone"
+      ],
+      "default": "blue"
+    },
+    "font_pairing": {
+      "type": "string",
+      "enum": [
+        "serif",
+        "sans",
+        "editorial",
+        "compact"
+      ],
+      "default": "sans"
+    },
+    "jd_text": {
+      "type": "string",
+      "default": ""
+    },
+    "first_visit_notice_seen": {
+      "type": "boolean",
+      "default": false
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "session_key"
+  ]
+}

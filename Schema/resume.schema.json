@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/resume-builder/resume.schema.json",
+  "title": "Resume Builder Resume",
+  "description": "A complete resume payload assembled from the Resume Builder profile and related ordered rows.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "profile": {
+      "$ref": "profile.schema.json"
+    },
+    "experiences": {
+      "type": "array",
+      "items": {
+        "$ref": "experience.schema.json"
+      },
+      "default": []
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "$ref": "education.schema.json"
+      },
+      "default": []
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "$ref": "skill.schema.json"
+      },
+      "default": []
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "$ref": "certification.schema.json"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "profile"
+  ]
+}
