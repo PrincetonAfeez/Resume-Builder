@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, cast
 
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
@@ -60,13 +61,14 @@ def _render_with_preview(
     context: dict[str, Any] | None = None,
     *,
     profile: Profile | None = None,
+    saved: bool = True,
 ) -> HttpResponse:
     profile = profile or _profile(request)
     payload = _preview_context(profile)
     payload.update(context or {})
     payload["include_oob"] = True
     response = render(request, template, payload)
-    response["HX-Trigger"] = "resume:saved"
+    response["HX-Trigger"] = "resume:saved" if saved else "resume:invalid"
     return response
 
 
@@ -108,37 +110,59 @@ def undo(request: HttpRequest) -> HttpResponse:
 def save_personal(request: HttpRequest) -> HttpResponse:
     profile = _profile(request)
     form = PersonalInfoForm(request.POST, instance=profile)
+    saved = False
     if form.is_valid():
         capture_undo_snapshot(request, profile)
         form.save()
-    return _render_with_preview(request, "resumes/partials/personal_form.html", {"personal_form": form})
+        saved = True
+    return _render_with_preview(
+        request,
+        "resumes/partials/personal_form.html",
+        {"personal_form": form},
+        saved=saved,
+    )
 
 
 @require_POST
 def save_summary(request: HttpRequest) -> HttpResponse:
     profile = _profile(request)
     form = SummaryForm(request.POST, instance=profile)
+    saved = False
     if form.is_valid():
         capture_undo_snapshot(request, profile)
         form.save()
-    return _render_with_preview(request, "resumes/partials/summary_form.html", {"summary_form": form})
+        saved = True
+    return _render_with_preview(
+        request,
+        "resumes/partials/summary_form.html",
+        {"summary_form": form},
+        saved=saved,
+    )
 
 
 @require_POST
 def save_theme(request: HttpRequest) -> HttpResponse:
     profile = _profile(request)
     form = ThemeForm(request.POST, instance=profile)
+    saved = False
     if form.is_valid():
         capture_undo_snapshot(request, profile)
         form.save()
-    return _render_with_preview(request, "resumes/partials/theme_form.html", {"theme_form": form})
+        saved = True
+    return _render_with_preview(
+        request,
+        "resumes/partials/theme_form.html",
+        {"theme_form": form},
+        saved=saved,
+    )
 
 
 @require_POST
 def add_experience(request: HttpRequest) -> HttpResponse:
-    profile = _profile(request)
-    capture_undo_snapshot(request, profile)
-    Experience.objects.create(profile=profile, order=next_order(profile.experiences.all()))
+    with transaction.atomic():
+        profile = _profile(request)
+        capture_undo_snapshot(request, profile)
+        Experience.objects.create(profile=profile, order=next_order(profile.experiences.all()))
     return _render_list(request, "resumes/partials/experience_list.html")
 
 
@@ -146,13 +170,16 @@ def add_experience(request: HttpRequest) -> HttpResponse:
 def save_experience(request: HttpRequest, pk: int) -> HttpResponse:
     experience = get_object_or_404(Experience, pk=pk, profile=_profile(request))
     form = ExperienceForm(request.POST, instance=experience)
+    saved = False
     if form.is_valid():
         capture_undo_snapshot(request, experience.profile)
         form.save()
+        saved = True
     return _render_with_preview(
         request,
         "resumes/partials/experience_item.html",
         {"experience": experience, "experience_form": form},
+        saved=saved,
     )
 
 
@@ -175,8 +202,9 @@ def move_experience(request: HttpRequest, pk: int) -> HttpResponse:
 @require_POST
 def add_achievement(request: HttpRequest, experience_id: int) -> HttpResponse:
     experience = get_object_or_404(Experience, pk=experience_id, profile=_profile(request))
-    capture_undo_snapshot(request, experience.profile)
-    Achievement.objects.create(experience=experience, order=next_order(experience.achievements.all()))
+    with transaction.atomic():
+        capture_undo_snapshot(request, experience.profile)
+        Achievement.objects.create(experience=experience, order=next_order(experience.achievements.all()))
     return _render_with_preview(
         request,
         "resumes/partials/achievement_list.html",
@@ -188,6 +216,7 @@ def add_achievement(request: HttpRequest, experience_id: int) -> HttpResponse:
 def save_achievement(request: HttpRequest, pk: int) -> HttpResponse:
     achievement = get_object_or_404(Achievement, pk=pk, experience__profile=_profile(request))
     form = AchievementForm(request.POST, instance=achievement)
+    saved = False
     if form.is_valid():
         capture_undo_snapshot(request, achievement.experience.profile)
         form.save()
@@ -195,6 +224,7 @@ def save_achievement(request: HttpRequest, pk: int) -> HttpResponse:
         if verb:
             achievement.text = replace_weak_opener(achievement.text, verb)
             achievement.save(update_fields=["text", "updated_at"])
+        saved = True
     achievement.refresh_from_db()
     return _render_with_preview(
         request,
@@ -204,6 +234,7 @@ def save_achievement(request: HttpRequest, pk: int) -> HttpResponse:
             "achievement_form": AchievementForm(instance=achievement),
             "warnings": check_bullet_quality(achievement.text),
         },
+        saved=saved,
     )
 
 
@@ -234,9 +265,11 @@ def _list_view(
     template: str,
     factory: Callable[..., Any],
 ) -> HttpResponse:
-    profile = _profile(request)
-    capture_undo_snapshot(request, profile)
-    factory(profile=profile, order=next_order(model.objects.filter(profile=profile)))
+    with transaction.atomic():
+        profile = _profile(request)
+        capture_undo_snapshot(request, profile)
+        siblings = model.objects.filter(profile=profile)
+        factory(profile=profile, order=next_order(siblings))
     return _render_list(request, template)
 
 
@@ -250,10 +283,16 @@ def _save_item(
 ) -> HttpResponse:
     item = get_object_or_404(model, pk=pk, profile=_profile(request))
     form = form_class(request.POST, instance=item)
-    if form.is_valid():
+    saved = form.is_valid()
+    if saved:
         capture_undo_snapshot(request, item.profile)
         form.save()
-    return _render_with_preview(request, template, {context_name: item, f"{context_name}_form": form})
+    return _render_with_preview(
+        request,
+        template,
+        {context_name: item, f"{context_name}_form": form},
+        saved=saved,
+    )
 
 
 def _delete_item(
@@ -288,7 +327,18 @@ def add_education(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def save_education(request: HttpRequest, pk: int) -> HttpResponse:
-    return _save_item(request, pk, Education, EducationForm, "resumes/partials/education_item.html", "education_item")
+    item = get_object_or_404(Education, pk=pk, profile=_profile(request))
+    form = EducationForm(request.POST, instance=item)
+    saved = form.is_valid()
+    if saved:
+        capture_undo_snapshot(request, item.profile)
+        form.save()
+    return _render_with_preview(
+        request,
+        "resumes/partials/education_item.html",
+        {"education_item": item, "education_form": form},
+        saved=saved,
+    )
 
 
 @require_http_methods(["DELETE", "POST"])
