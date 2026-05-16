@@ -1,0 +1,25 @@
+{% extends "resumes/base.html" %}
+{% block title %}Analyze Job Description{% endblock %}
+{% block content %}
+  <main class="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)]">
+    <section class="editor-panel">
+      <div class="section-heading">
+        <h1>JD Analyzer</h1>
+      </div>
+      <form
+        hx-post="{% url 'resumes:run_analyzer' %}"
+        hx-target="#analysis-results"
+        hx-swap="outerHTML"
+        class="space-y-3"
+      >
+        {% csrf_token %}
+        <textarea name="jd_text" rows="14" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:ring-2 focus:ring-slate-200">{{ profile.jd_text }}</textarea>
+        <button class="primary-button" type="submit"><i data-lucide="scan-search"></i><span>Analyze</span></button>
+      </form>
+      {% include "resumes/partials/analyzer_results.html" %}
+    </section>
+    <aside class="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:overflow-auto">
+      {% include "resumes/partials/preview_pane.html" %}
+    </aside>
+  </main>
+{% endblock %}

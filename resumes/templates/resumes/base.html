@@ -1,0 +1,63 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Resume Builder{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="{% static 'resumes/css/app.css' %}">
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-950">
+    <header class="border-b border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+        <a href="{% url 'resumes:edit' %}" class="text-sm font-semibold tracking-wide text-slate-950">Resume Builder</a>
+        <nav class="flex items-center gap-2">
+          <a class="icon-link" href="{% url 'resumes:edit' %}" title="Editor">
+            <i data-lucide="panel-left" aria-hidden="true"></i><span>Editor</span>
+          </a>
+          <a class="icon-link" href="{% url 'resumes:analyze' %}" title="Analyzer">
+            <i data-lucide="scan-search" aria-hidden="true"></i><span>Analyze</span>
+          </a>
+          <a class="icon-link" href="{% url 'resumes:export' %}?format=pdf" title="Download PDF">
+            <i data-lucide="download" aria-hidden="true"></i><span>PDF</span>
+          </a>
+        </nav>
+      </div>
+    </header>
+    {% block content %}{% endblock %}
+    <script>
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+
+      document.body.addEventListener('htmx:configRequest', function (event) {
+        event.detail.headers['X-CSRFToken'] = getCookie('csrftoken');
+      });
+
+      document.body.addEventListener('resume:saved', function () {
+        const indicator = document.querySelector('#saved-indicator');
+        if (!indicator) return;
+        indicator.textContent = 'Saved';
+        indicator.classList.remove('text-slate-400');
+        indicator.classList.add('text-emerald-700');
+        window.setTimeout(function () {
+          indicator.textContent = 'Idle';
+          indicator.classList.add('text-slate-400');
+          indicator.classList.remove('text-emerald-700');
+        }, 1800);
+      });
+
+      document.body.addEventListener('htmx:afterSettle', function () {
+        if (window.lucide) window.lucide.createIcons();
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    </script>
+  </body>
+</html>

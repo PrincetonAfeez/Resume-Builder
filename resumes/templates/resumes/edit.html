@@ -1,0 +1,49 @@
+{% extends "resumes/base.html" %}
+{% load resume_forms %}
+{% block title %}Edit Resume{% endblock %}
+{% block content %}
+  <main class="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)]">
+    <section class="space-y-4">
+      {% if show_first_visit_notice %}
+        <div class="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-950">
+          Your resume lives in this browser session. Download the PDF to keep it permanently. Clearing cookies will erase your work.
+        </div>
+      {% endif %}
+
+      <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Completeness</p>
+          <div class="mt-1 flex items-center gap-3" title="{% for label, points, passed in score.breakdown %}{{ label }}: {% if passed %}+{{ points }}{% else %}0{% endif %}; {% endfor %}">
+            <div class="h-2 w-48 overflow-hidden rounded-full bg-slate-200">
+              <div class="h-full bg-emerald-600" style="width: {{ score.score }}%"></div>
+            </div>
+            <span class="text-sm font-semibold text-slate-900">{{ score.score }}/100</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="saved-indicator" class="text-sm font-medium text-slate-400">Idle</span>
+          <form method="post" action="{% url 'resumes:undo' %}">
+            {% csrf_token %}
+            <button class="icon-button" type="submit" title="Undo last change"><i data-lucide="undo-2"></i></button>
+          </form>
+          <form method="post" action="{% url 'resumes:start_over' %}">
+            {% csrf_token %}
+            <button class="danger-button" type="submit" title="Start over"><i data-lucide="rotate-ccw"></i><span>Start over</span></button>
+          </form>
+        </div>
+      </div>
+
+      {% include "resumes/partials/personal_form.html" %}
+      {% include "resumes/partials/summary_form.html" %}
+      {% include "resumes/partials/theme_form.html" %}
+      {% include "resumes/partials/experience_list.html" %}
+      {% include "resumes/partials/education_list.html" %}
+      {% include "resumes/partials/skill_list.html" %}
+      {% include "resumes/partials/certification_list.html" %}
+    </section>
+
+    <aside class="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:overflow-auto">
+      {% include "resumes/partials/preview_pane.html" %}
+    </aside>
+  </main>
+{% endblock %}
