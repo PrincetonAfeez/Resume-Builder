@@ -4,7 +4,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-releaseCommand = "python manage.py migrate --noinput && python manage.py check_production_runtime"
+releaseCommand = "python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py check_production_runtime"
 startCommand = "gunicorn resume_builder.wsgi:application --bind 0.0.0.0:$PORT"
 healthcheckPath = "/health/"
 healthcheckTimeout = 100
