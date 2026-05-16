@@ -35,6 +35,9 @@ test-results/
 server.err.log
 server.out.log
 
+# Frontend build tooling (vendored output lives in resumes/static/resumes/vendor/)
+frontend/node_modules/
+
 # Editor / agent worktrees
 .claude/
 
