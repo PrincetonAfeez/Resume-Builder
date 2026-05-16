@@ -9,7 +9,7 @@
 
 Resume Builder is a session-only browser app for creating one polished resume and keeping it by downloading PDF, DOCX, or TXT. The application intentionally avoids accounts, passwords, and saved resume libraries. A Django session cookie identifies the working profile, and the durable persistence step is export.
 
-The project is larger than a simple form app. It includes HTMX autosave, a split-screen editor, live preview, three themes, accent colors, font pairings, ordered resume sections, undo, start-over, PDF/DOCX/TXT export, job-description keyword analysis, bullet-quality warnings, action verb suggestions, completeness scoring, export/analyzer rate limits, stale-profile pruning, Railway deployment, a health endpoint, and runtime checks for WeasyPrint.
+The project is larger than a simple form app. It includes HTMX autosave, a split-screen editor, live preview, three themes, accent colors, font pairings, ordered resume sections, undo, start-over, PDF/DOCX/TXT export, job-description keyword analysis, bullet-quality warnings, action verb suggestions, completeness scoring, export/analyzer rate limits, stale-profile pruning, vendored frontend assets (no production CDN dependency), Railway deployment, a health endpoint, and release-time checks for WeasyPrint.
 
 The decision was to build Resume Builder as a Django monolith with server-rendered templates and HTMX partials, while keeping business rules in focused services.
 
@@ -73,7 +73,7 @@ The decision was to build Resume Builder as a Django monolith with server-render
 
 ### Decision 6 — HTMX autosave with partial templates
 
-**Chosen:** Each section posts to a small endpoint and receives a partial response. The response includes preview context and triggers `resume:saved`.
+**Chosen:** Each section posts to a small endpoint and receives a partial response. The response includes preview context. Valid saves set `HX-Trigger: resume:saved`; invalid saves set `HX-Trigger: resume:invalid` so the UI can show a save indicator without implying success.
 
 **Rejected:** A single full-page submit button or client-side state management.
 
@@ -83,7 +83,7 @@ The decision was to build Resume Builder as a Django monolith with server-render
 
 ### Decision 7 — One-step undo through session snapshots
 
-**Chosen:** Before mutations, the app serializes the profile and related rows into `request.session["undo_snapshot"]`. Undo restores that snapshot transactionally.
+**Chosen:** Before mutations, the app reloads the profile from the database, serializes it and related rows into `request.session["undo_snapshot"]`, then applies the change. Undo restores that snapshot transactionally.
 
 **Rejected:** Full version history, per-field undo, or an audit-log table.
 
@@ -93,7 +93,7 @@ The decision was to build Resume Builder as a Django monolith with server-render
 
 ### Decision 8 — Export is the persistence boundary
 
-**Chosen:** The app supports PDF, DOCX, and TXT exports. PDF uses WeasyPrint when available and a minimal fallback PDF when native libraries are unavailable. DOCX uses `python-docx`. TXT is ATS-friendly plain text.
+**Chosen:** The app supports PDF, DOCX, and TXT exports. PDF uses WeasyPrint when available (themed HTML with a resolved `file://` stylesheet URI) and a minimal fallback PDF when native libraries are unavailable locally. DOCX uses `python-docx`. TXT is ATS-friendly plain text.
 
 **Rejected:** Server-side saved resume libraries or cloud document storage.
 
@@ -113,11 +113,11 @@ The decision was to build Resume Builder as a Django monolith with server-render
 
 ### Decision 10 — Deterministic JD analyzer over LLM features
 
-**Chosen:** Use keyword extraction, present/missing keyword groups, and a match percentage. TF-IDF is attempted through scikit-learn, with a fallback keyword counter.
+**Chosen:** Use keyword extraction, present/missing keyword groups, and a match percentage. Keywords are matched with token boundaries (not naive substring search). TF-IDF is attempted through scikit-learn, with a fallback keyword counter.
 
 **Rejected:** LLM-powered rewriting or job-tailoring features in V1.
 
-**Reason:** Deterministic analysis is cheaper, safer, testable, and privacy-friendly. LLM features would add scope, privacy, prompt, and reliability questions.
+**Reason:** Deterministic analysis is cheaper, safer, testable, and privacy-friendly. Token matching avoids false positives (for example `go` inside `django`). LLM features would add scope, privacy, prompt, and reliability questions.
 
 ---
 
@@ -143,11 +143,21 @@ The decision was to build Resume Builder as a Django monolith with server-render
 
 ### Decision 13 — Production runtime checks for WeasyPrint
 
-**Chosen:** `check_production_runtime` logs whether WeasyPrint can render with native libraries. Railway/Nixpacks installs the needed native packages.
+**Chosen:** `check_production_runtime` runs on Railway release (after `collectstatic` and migrations). It logs `production_runtime weasyprint=available` and succeeds, or logs `production_runtime weasyprint=unavailable` and fails the release with `CommandError`. Railway/Nixpacks installs the needed native packages. Local dev may still use a minimal fallback PDF when WeasyPrint is missing.
 
-**Rejected:** Assuming PDF runtime support will work silently.
+**Rejected:** Assuming PDF runtime support will work silently, or treating missing WeasyPrint on release as a successful deploy.
 
-**Reason:** WeasyPrint depends on native libraries. Making runtime status visible in release logs reduces deployment uncertainty.
+**Reason:** WeasyPrint depends on native libraries. Failing release when PDF rendering is unavailable prevents shipping production without themed PDF export.
+
+---
+
+### Decision 14 — Vendored frontend assets over public CDNs
+
+**Chosen:** Serve Tailwind CSS, HTMX, and Lucide from `resumes/static/resumes/vendor/` via Django static files and WhiteNoise. Pin versions and rebuild Tailwind from `frontend/input.css` when template classes change. See `docs/adr/0010-vendored-frontend-assets.md`.
+
+**Rejected:** Loading Tailwind, HTMX, and Lucide from public CDNs in production templates.
+
+**Reason:** Editor styling and autosave must not depend on third-party CDN availability, latency, or policy changes. `collectstatic` ships vendor assets with the app.
 
 ---
 
@@ -162,12 +172,14 @@ The decision was to build Resume Builder as a Django monolith with server-render
 - Undo, bullet warnings, completeness scoring, and analyzer results provide practical feedback.
 - Rate limits and pruning reflect operational maturity.
 - WeasyPrint runtime checks surface deployment issues early.
+- Vendored frontend assets keep the editor usable without CDN dependency.
 
 **Negative / Trade-offs:**
 - Session loss means resume loss unless the user exports.
 - No multi-resume library exists in V1.
 - DOCX is not theme-perfect.
 - WeasyPrint introduces native runtime dependency risk.
+- Vendored CSS/JS requires rebuild scripts when UI classes or pinned versions change.
 - HTMX partials create many endpoints and templates.
 - One-level undo is useful but limited.
 - Local SQLite differs from production PostgreSQL.
@@ -235,7 +247,7 @@ HTMX POST section save endpoint
   -> if valid: capture_undo_snapshot + save
   -> rebuild preview context
   -> render section partial
-  -> response HX-Trigger: resume:saved
+  -> HX-Trigger: resume:saved (valid) or resume:invalid (errors)
 ```
 
 ### Export
@@ -255,7 +267,7 @@ POST /resume/analyze/run/
   -> rate limit by session
   -> save jd_text
   -> extract_keywords(jd_text)
-  -> compare against profile_resume_text(profile)
+  -> token-match keywords against profile_resume_text(profile)
   -> render analyzer_results partial
 ```
 
@@ -298,7 +310,9 @@ Resume-Builder/
       check_production_runtime.py
   templates/
   static/
-  assets/tailwind/input.css
+  frontend/input.css
+  resumes/static/resumes/vendor/
+  scripts/vendor_frontend_assets.py
   tests/
   docs/adr/
   docs/screenshots/
@@ -480,7 +494,7 @@ Creates a session if needed, then gets or creates a `Profile` for that session k
 
 ### `next_order(queryset)`
 
-Returns one greater than the current max `order` value.
+Returns one greater than the current max `order` value. Add-item views call it inside `transaction.atomic()` with `select_for_update()` on the sibling queryset to avoid duplicate order values under concurrent posts.
 
 ---
 
@@ -522,7 +536,7 @@ Dispatches to PDF, DOCX, or TXT export.
 
 ### `export_pdf(context)`
 
-Renders themed PDF through WeasyPrint. If native runtime is missing, returns a minimal fallback PDF.
+Renders themed PDF through WeasyPrint using `resolve_pdf_stylesheet_uri()` and `BASE_DIR` as `base_url`. If native runtime is missing locally, returns a minimal fallback PDF (production release fails `check_production_runtime` instead).
 
 ---
 
@@ -558,7 +572,7 @@ Scores summary, experience, bullets, dates, education, skills, contact info, and
 
 ### `analyze_job_description(profile, jd_text)`
 
-Extracts keywords, compares them to resume text, and returns present/missing keywords plus match percentage.
+Extracts keywords, token-matches them to resume text, and returns present/missing keywords plus match percentage.
 
 ---
 
@@ -720,19 +734,25 @@ Run checks:
 
 ```powershell
 python manage.py check
-python manage.py check_production_runtime
 python -m pytest -m "not e2e and not weasyprint"
 python -m pytest -m "weasyprint or e2e"
+```
+
+`check_production_runtime` requires WeasyPrint native libraries (CI **linux-integration** and Railway release). On Windows without those libs it exits with an error.
+
+```powershell
+python manage.py check_production_runtime
 python -m ruff check .
 python -m black --check .
 python -m isort --check-only .
 python -m mypy resumes
 ```
 
-Tailwind standalone:
+Vendor frontend (after template or pin changes):
 
 ```powershell
-tailwindcss -i .\assets\tailwind\input.css -o .\static\css\site.css --minify
+python scripts/vendor_frontend_assets.py
+# Rebuild Tailwind from frontend/ per docs/adr/0010-vendored-frontend-assets.md
 ```
 
 ---
@@ -823,7 +843,7 @@ Unsupported format returns HTTP 400.
 
 - HTTP 200
 - rendered partial
-- `HX-Trigger: resume:saved`
+- `HX-Trigger: resume:saved` when the form is valid, or `resume:invalid` when validation fails
 - form errors if invalid
 - preview context included
 
@@ -868,7 +888,7 @@ Blocked response:
 | Variable | Purpose |
 |---|---|
 | `DJANGO_SETTINGS_MODULE` | settings module |
-| `SECRET_KEY` | Django secret |
+| `SECRET_KEY` | Django secret; production rejects the dev default `dev-only-change-me` |
 | `DEBUG` | debug toggle |
 | `DJANGO_READ_DOT_ENV_FILE` | local `.env` loading toggle |
 | `SESSION_COOKIE_AGE` | session lifetime |
@@ -898,7 +918,7 @@ Blocked response:
 | export | generates downloadable bytes |
 | analyzer | stores JD text and renders analysis |
 | prune command | deletes stale profiles |
-| release command | migrates and checks PDF runtime |
+| release command | `collectstatic`, migrates, checks WeasyPrint (fails release if unavailable) |
 
 ---
 
@@ -1046,11 +1066,18 @@ Expected:
 
 ## Running Tests and Checks
 
+Fast suite: ~82 tests locally when WeasyPrint/E2E markers are excluded (full count on Linux CI with integration job).
+
 ```powershell
 python manage.py check
-python manage.py check_production_runtime
 python -m pytest -m "not e2e and not weasyprint"
 python -m pytest -m "weasyprint or e2e"
+```
+
+`check_production_runtime` requires WeasyPrint native libraries (CI **linux-integration** and Railway release). On Windows without those libs it exits with an error.
+
+```powershell
+python manage.py check_production_runtime
 python -m ruff check .
 python -m black --check .
 python -m isort --check-only .
@@ -1114,7 +1141,7 @@ python manage.py prune_stale_profiles
 Railway release command:
 
 ```text
-python manage.py migrate --noinput && python manage.py check_production_runtime
+python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py check_production_runtime
 ```
 
 Railway start command:
@@ -1193,10 +1220,11 @@ Expected:
 production_runtime weasyprint=available
 ```
 
-or:
+Failed release (WeasyPrint missing):
 
 ```text
-production_runtime weasyprint=fallback_only
+production_runtime weasyprint=unavailable
+WeasyPrint native runtime is unavailable; themed PDF export will not work in production.
 ```
 
 ---
@@ -1300,12 +1328,12 @@ Use undo if a snapshot exists.
 python manage.py prune_stale_profiles
 ```
 
-### Production PDF fallback
+### Production PDF / failed release
 
-1. Check release logs.
+1. Check release logs for `production_runtime weasyprint=unavailable`.
 2. Confirm native packages from `nixpacks.toml`.
 3. Redeploy.
-4. Run/check `check_production_runtime`.
+4. Confirm release succeeds with `production_runtime weasyprint=available`.
 
 ---
 
@@ -1313,7 +1341,7 @@ python manage.py prune_stale_profiles
 
 Important messages:
 - `production_runtime weasyprint=available`
-- `production_runtime weasyprint=fallback_only`
+- `production_runtime weasyprint=unavailable` (release failure)
 - `pdf_export renderer=weasyprint theme=... bytes=...`
 - `pdf_export renderer=fallback theme=...`
 - `prune_stale_profiles deleted=N`
@@ -1330,6 +1358,7 @@ Production logging uses a small JSON formatter with level, logger, message, and 
 - Preserve object ownership filters in all object-level views.
 - Keep rate limits on expensive endpoints.
 - Verify WeasyPrint runtime after deployment changes.
+- Rebuild vendored frontend assets after template class or JS pin changes.
 - Regenerate screenshots after UI changes.
 - Keep the web service and prune service separate.
 
@@ -1384,7 +1413,7 @@ The normalized model was also worth the extra structure. Even temporary session 
 
 The biggest weakness is the session-only persistence model. It is honest and scoped, but users can lose work if they clear cookies, switch devices, or return after session expiry without exporting. The first-visit notice mitigates this, but the app still depends on users understanding that downloads are the durable result.
 
-The second weakness is PDF runtime complexity. WeasyPrint gives high-quality PDF output, but it depends on native libraries. The fallback PDF prevents complete failure, yet fallback output is intentionally minimal. Production runtime checks and Nixpacks help, but PDF rendering remains an operational concern.
+The second weakness is PDF runtime complexity. WeasyPrint gives high-quality PDF output, but it depends on native libraries. Local fallback PDF prevents complete failure during dev, yet fallback output is intentionally minimal. Production release fails if WeasyPrint is unavailable; Nixpacks and runtime checks reduce but do not eliminate operational concern.
 
 The third weakness is endpoint volume. HTMX autosave is pleasant for users, but it creates many partials and many route handlers. The patterns are consistent, but future growth could make `views.py` too large unless feature areas are split.
 
