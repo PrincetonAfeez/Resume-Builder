@@ -153,3 +153,11 @@ class CertificationForm(AutosaveMixin, forms.ModelForm):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._style_fields()
+
+    def clean(self) -> dict[str, Any]:
+        cleaned = super().clean() or {}
+        date_earned = cleaned.get("date_earned")
+        expiry = cleaned.get("expiry")
+        if date_earned and expiry and expiry < date_earned:
+            self.add_error("expiry", "Expiry must be on or after date earned.")
+        return cleaned
