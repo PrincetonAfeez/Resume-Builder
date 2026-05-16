@@ -11,8 +11,10 @@ from resumes.services.analysis import (
     check_bullet_quality,
     completeness_score,
     extract_keywords,
+    keyword_present_in_resume,
     profile_resume_text,
     replace_weak_opener,
+    tokenize_for_matching,
 )
 
 
@@ -67,6 +69,13 @@ def test_completeness_flags_incomplete_bullets(profile):
     result = completeness_score(profile)
 
     assert any(label == "No flagged bullets" and not passed for label, _points, passed in result.breakdown)
+
+
+def test_short_keyword_does_not_match_inside_other_tokens():
+    resume_tokens = tokenize_for_matching("Senior Django engineer building APIs")
+
+    assert not keyword_present_in_resume("go", resume_tokens)
+    assert keyword_present_in_resume("django", resume_tokens)
 
 
 @pytest.mark.django_db

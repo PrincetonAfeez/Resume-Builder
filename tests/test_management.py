@@ -6,14 +6,19 @@ from io import StringIO
 
 import pytest
 from django.core.management import call_command
+from django.core.management.base import CommandError
+
+from resumes.services.resume_export import weasyprint_runtime_available
 
 
-def test_check_production_runtime_command_logs(capsys):
+def test_check_production_runtime_command():
     out = StringIO()
-    call_command("check_production_runtime", stdout=out)
-    output = out.getvalue()
-
-    assert "production_runtime weasyprint=" in output
+    if weasyprint_runtime_available():
+        call_command("check_production_runtime", stdout=out)
+        assert "production_runtime weasyprint=available" in out.getvalue()
+    else:
+        with pytest.raises(CommandError, match="WeasyPrint native runtime is unavailable"):
+            call_command("check_production_runtime", stdout=out)
 
 
 @pytest.mark.django_db

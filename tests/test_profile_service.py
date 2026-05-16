@@ -7,6 +7,7 @@ from datetime import timedelta
 import pytest
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.models import Session
+from django.db import transaction
 from django.test import RequestFactory
 from django.utils import timezone
 
@@ -30,6 +31,19 @@ def test_get_or_create_profile_creates_session_key():
 
     assert request.session.session_key
     assert profile.session_key == request.session.session_key
+
+
+@pytest.mark.django_db
+def test_next_order_allocates_unique_values_inside_transaction(profile):
+    with transaction.atomic():
+        first = next_order(profile.skills.all())
+        Skill.objects.create(profile=profile, name="Skill A", category="technical", order=first)
+        second = next_order(profile.skills.all())
+        Skill.objects.create(profile=profile, name="Skill B", category="technical", order=second)
+
+    orders = list(profile.skills.order_by("order").values_list("order", flat=True))
+    assert first != second
+    assert len(orders) == len(set(orders))
 
 
 @pytest.mark.django_db

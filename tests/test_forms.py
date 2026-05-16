@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from resumes.forms import EducationForm, ExperienceForm
-from resumes.models import Education, Experience, Profile
+from resumes.forms import CertificationForm, EducationForm, ExperienceForm
+from resumes.models import Certification, Education, Experience, Profile
 
 
 @pytest.mark.django_db
@@ -64,3 +64,21 @@ def test_education_form_rejects_invalid_range():
 
     assert not form.is_valid()
     assert "end_date" in form.errors
+
+
+@pytest.mark.django_db
+def test_certification_form_rejects_expiry_before_earned():
+    certification = Certification.objects.create(profile=Profile.objects.create(session_key="cert-form"))
+    form = CertificationForm(
+        data={
+            "name": "AWS",
+            "issuing_body": "Amazon",
+            "date_earned": "2024-06-01",
+            "expiry": "2020-01-01",
+            "credential_id": "",
+        },
+        instance=certification,
+    )
+
+    assert not form.is_valid()
+    assert "expiry" in form.errors

@@ -11,8 +11,17 @@ from resumes.services.resume_export import (
     export_resume,
     export_txt,
     pdf_uses_weasyprint,
+    resolve_pdf_stylesheet_uri,
     weasyprint_runtime_available,
 )
+
+
+def test_resolve_pdf_stylesheet_uri_finds_app_css():
+    uri = resolve_pdf_stylesheet_uri()
+
+    assert uri is not None
+    assert uri.startswith("file:")
+    assert uri.replace("\\", "/").endswith("resumes/css/app.css")
 
 
 @pytest.mark.django_db

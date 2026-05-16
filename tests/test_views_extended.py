@@ -196,3 +196,28 @@ def test_personal_save_sets_htmx_trigger(client):
     )
 
     assert response["HX-Trigger"] == "resume:saved"
+
+
+@pytest.mark.django_db
+def test_invalid_experience_save_sets_invalid_trigger(client):
+    client.get("/resume/edit/")
+    client.post("/resume/experience/add/", HTTP_HX_REQUEST="true")
+    experience = Experience.objects.get()
+
+    response = client.post(
+        f"/resume/experience/{experience.id}/save/",
+        {
+            "company": "Acme",
+            "title": "Engineer",
+            "location": "",
+            "start_date": "2024-06-01",
+            "end_date": "2024-01-01",
+            "current_role": "",
+        },
+        HTTP_HX_REQUEST="true",
+    )
+
+    assert response.status_code == 200
+    assert response["HX-Trigger"] == "resume:invalid"
+    experience.refresh_from_db()
+    assert experience.company != "Acme" or not experience.company

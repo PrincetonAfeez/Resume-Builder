@@ -104,22 +104,41 @@ def test_education_skill_certification_flows(client):
 
     assert client.post("/resume/education/add/", HTTP_HX_REQUEST="true").status_code == 200
     education = Education.objects.get(profile=profile)
-    assert (
-        client.post(
-            f"/resume/education/{education.id}/save/",
-            {
-                "institution": "University",
-                "degree": "BS",
-                "field": "Computer Science",
-                "start_date": "2020-01-01",
-                "end_date": "2024-01-01",
-                "gpa": "",
-                "notes": "",
-            },
-            HTTP_HX_REQUEST="true",
-        ).status_code
-        == 200
+    save_response = client.post(
+        f"/resume/education/{education.id}/save/",
+        {
+            "institution": "University",
+            "degree": "BS",
+            "field": "Computer Science",
+            "start_date": "2020-01-01",
+            "end_date": "2024-01-01",
+            "gpa": "",
+            "notes": "",
+        },
+        HTTP_HX_REQUEST="true",
     )
+    assert save_response.status_code == 200
+    assert save_response["HX-Trigger"] == "resume:saved"
+    assert b'name="institution"' in save_response.content
+    assert b'name="degree"' in save_response.content
+
+    invalid_education = client.post(
+        f"/resume/education/{education.id}/save/",
+        {
+            "institution": "University",
+            "degree": "BS",
+            "field": "Computer Science",
+            "start_date": "2024-06-01",
+            "end_date": "2020-01-01",
+            "gpa": "",
+            "notes": "",
+        },
+        HTTP_HX_REQUEST="true",
+    )
+    assert invalid_education.status_code == 200
+    assert invalid_education["HX-Trigger"] == "resume:invalid"
+    assert b'name="institution"' in invalid_education.content
+    assert b'name="degree"' in invalid_education.content
 
     assert client.post("/resume/skill/add/", HTTP_HX_REQUEST="true").status_code == 200
     skill = Skill.objects.get(profile=profile)
