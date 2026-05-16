@@ -1,0 +1,19 @@
+{% load resume_forms %}
+<section id="skills-section" class="editor-panel">
+  <div class="section-heading">
+    <h2>Skills</h2>
+    <button class="icon-button" type="button" title="Add skill" hx-post="{% url 'resumes:add_skill' %}" hx-target="#skills-section" hx-swap="outerHTML">
+      <i data-lucide="plus"></i>
+    </button>
+  </div>
+  <div class="space-y-3">
+    {% for skill in skills %}
+      {% with skill_form=skill|skill_form %}
+        {% include "resumes/partials/skill_item.html" with suppress_oob=True %}
+      {% endwith %}
+    {% empty %}
+      <p class="empty-state">No skills yet.</p>
+    {% endfor %}
+  </div>
+  {% if include_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</section>

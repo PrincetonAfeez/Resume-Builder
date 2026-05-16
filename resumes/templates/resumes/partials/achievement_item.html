@@ -1,0 +1,30 @@
+<div id="achievement-{{ achievement.id }}" class="bullet-row">
+  <div class="flex gap-1">
+    <button class="icon-button" type="button" title="Move up" hx-post="{% url 'resumes:move_achievement' achievement.id %}" hx-vals='{"direction":"up"}' hx-target="#achievements-{{ achievement.experience.id }}" hx-swap="outerHTML"><i data-lucide="arrow-up"></i></button>
+    <button class="icon-button" type="button" title="Move down" hx-post="{% url 'resumes:move_achievement' achievement.id %}" hx-vals='{"direction":"down"}' hx-target="#achievements-{{ achievement.experience.id }}" hx-swap="outerHTML"><i data-lucide="arrow-down"></i></button>
+  </div>
+  <form
+    class="min-w-0 flex-1"
+    hx-post="{% url 'resumes:save_achievement' achievement.id %}"
+    hx-trigger="change delay:250ms, keyup changed delay:700ms from:textarea"
+    hx-target="#achievement-{{ achievement.id }}"
+    hx-swap="outerHTML"
+  >
+    {% csrf_token %}
+    {{ achievement_form.text }}
+    {% for error in achievement_form.text.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    {% if warnings %}
+      <div class="mt-2 flex flex-wrap gap-1">
+        {% for warning in warnings %}
+          <span class="warning-pill" title="{{ warning.message }}"><i data-lucide="triangle-alert"></i>{{ warning.code }}</span>
+        {% endfor %}
+        <button class="mini-button" type="button" hx-get="{% url 'resumes:action_verbs' achievement.id %}" hx-target="#verbs-{{ achievement.id }}" hx-swap="innerHTML">
+          <i data-lucide="sparkles"></i><span>Verbs</span>
+        </button>
+      </div>
+      <div id="verbs-{{ achievement.id }}"></div>
+    {% endif %}
+  </form>
+  <button class="icon-button danger-icon" type="button" title="Remove bullet" hx-delete="{% url 'resumes:delete_achievement' achievement.id %}" hx-confirm="Remove this bullet?" hx-target="#achievements-{{ achievement.experience.id }}" hx-swap="outerHTML"><i data-lucide="trash-2"></i></button>
+  {% if include_oob and not suppress_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</div>

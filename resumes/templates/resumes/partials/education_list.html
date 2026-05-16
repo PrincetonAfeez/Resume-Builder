@@ -1,0 +1,19 @@
+{% load resume_forms %}
+<section id="education-section" class="editor-panel">
+  <div class="section-heading">
+    <h2>Education</h2>
+    <button class="icon-button" type="button" title="Add education" hx-post="{% url 'resumes:add_education' %}" hx-target="#education-section" hx-swap="outerHTML">
+      <i data-lucide="plus"></i>
+    </button>
+  </div>
+  <div class="space-y-3">
+    {% for education in education %}
+      {% with education_item=education education_form=education|education_form %}
+        {% include "resumes/partials/education_item.html" with suppress_oob=True %}
+      {% endwith %}
+    {% empty %}
+      <p class="empty-state">No education yet.</p>
+    {% endfor %}
+  </div>
+  {% if include_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</section>

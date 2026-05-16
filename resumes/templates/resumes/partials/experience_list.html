@@ -1,0 +1,19 @@
+{% load resume_forms %}
+<section id="experiences-section" class="editor-panel">
+  <div class="section-heading">
+    <h2>Experience</h2>
+    <button class="icon-button" type="button" title="Add experience" hx-post="{% url 'resumes:add_experience' %}" hx-target="#experiences-section" hx-swap="outerHTML">
+      <i data-lucide="plus"></i>
+    </button>
+  </div>
+  <div class="space-y-3">
+    {% for experience in experiences %}
+      {% with experience_form=experience|experience_form %}
+        {% include "resumes/partials/experience_item.html" with suppress_oob=True %}
+      {% endwith %}
+    {% empty %}
+      <p class="empty-state">No experience yet.</p>
+    {% endfor %}
+  </div>
+  {% if include_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</section>

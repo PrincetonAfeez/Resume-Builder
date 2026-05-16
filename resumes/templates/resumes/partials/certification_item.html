@@ -1,0 +1,24 @@
+<article id="certification-{{ certification.id }}" class="item-panel">
+  <div class="item-actions">
+    <button class="icon-button" type="button" title="Move up" hx-post="{% url 'resumes:move_certification' certification.id %}" hx-vals='{"direction":"up"}' hx-target="#certifications-section" hx-swap="outerHTML"><i data-lucide="arrow-up"></i></button>
+    <button class="icon-button" type="button" title="Move down" hx-post="{% url 'resumes:move_certification' certification.id %}" hx-vals='{"direction":"down"}' hx-target="#certifications-section" hx-swap="outerHTML"><i data-lucide="arrow-down"></i></button>
+    <button class="icon-button danger-icon" type="button" title="Remove certification" hx-delete="{% url 'resumes:delete_certification' certification.id %}" hx-confirm="Remove this certification?" hx-target="#certifications-section" hx-swap="outerHTML"><i data-lucide="trash-2"></i></button>
+  </div>
+  <form
+    hx-post="{% url 'resumes:save_certification' certification.id %}"
+    hx-trigger="change delay:250ms, keyup changed delay:700ms from:input"
+    hx-target="#certification-{{ certification.id }}"
+    hx-swap="outerHTML"
+    class="grid gap-3 sm:grid-cols-2"
+  >
+    {% csrf_token %}
+    {% for field in certification_form %}
+      <label>
+        <span class="field-label">{{ field.label }}</span>
+        {{ field }}
+        {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </label>
+    {% endfor %}
+  </form>
+  {% if include_oob and not suppress_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</article>

@@ -1,0 +1,19 @@
+{% load resume_forms %}
+<div id="achievements-{{ experience.id }}" class="mt-3 border-t border-slate-200 pt-3">
+  <div class="mb-2 flex items-center justify-between">
+    <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Achievements</h3>
+    <button class="icon-button" type="button" title="Add bullet" hx-post="{% url 'resumes:add_achievement' experience.id %}" hx-target="#achievements-{{ experience.id }}" hx-swap="outerHTML">
+      <i data-lucide="list-plus"></i>
+    </button>
+  </div>
+  <div class="space-y-2">
+    {% for achievement in experience.achievements.all %}
+      {% with achievement_form=achievement|achievement_form warnings=achievement.text|bullet_warnings %}
+        {% include "resumes/partials/achievement_item.html" with suppress_oob=True %}
+      {% endwith %}
+    {% empty %}
+      <p class="empty-state">No bullets yet.</p>
+    {% endfor %}
+  </div>
+  {% if include_oob and not suppress_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</div>

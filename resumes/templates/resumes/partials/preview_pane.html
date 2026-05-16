@@ -1,0 +1,13 @@
+<div id="preview-pane" class="preview-shell"{% if oob %} hx-swap-oob="outerHTML"{% endif %}>
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <h2 class="text-sm font-semibold text-slate-700">Live Preview</h2>
+    <div class="flex items-center gap-2">
+      <a class="mini-button" href="{% url 'resumes:export' %}?format=pdf&theme={{ profile.chosen_theme }}" title="Download PDF (uses your theme)"><i data-lucide="file-down"></i><span>PDF</span></a>
+      <a class="mini-button" href="{% url 'resumes:export' %}?format=docx" title="Download DOCX (structured plain export; theme applies to PDF only)"><i data-lucide="file-text"></i><span>DOCX</span></a>
+      <a class="mini-button" href="{% url 'resumes:export' %}?format=txt&theme={{ profile.chosen_theme }}" title="Download TXT"><i data-lucide="braces"></i><span>TXT</span></a>
+    </div>
+  </div>
+  <div class="paper">
+    {% include template_name %}
+  </div>
+</div>

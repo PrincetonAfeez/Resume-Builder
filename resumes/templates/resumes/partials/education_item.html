@@ -1,0 +1,24 @@
+<article id="education-{{ education_item.id }}" class="item-panel">
+  <div class="item-actions">
+    <button class="icon-button" type="button" title="Move up" hx-post="{% url 'resumes:move_education' education_item.id %}" hx-vals='{"direction":"up"}' hx-target="#education-section" hx-swap="outerHTML"><i data-lucide="arrow-up"></i></button>
+    <button class="icon-button" type="button" title="Move down" hx-post="{% url 'resumes:move_education' education_item.id %}" hx-vals='{"direction":"down"}' hx-target="#education-section" hx-swap="outerHTML"><i data-lucide="arrow-down"></i></button>
+    <button class="icon-button danger-icon" type="button" title="Remove education" hx-delete="{% url 'resumes:delete_education' education_item.id %}" hx-confirm="Remove this education?" hx-target="#education-section" hx-swap="outerHTML"><i data-lucide="trash-2"></i></button>
+  </div>
+  <form
+    hx-post="{% url 'resumes:save_education' education_item.id %}"
+    hx-trigger="change delay:250ms, keyup changed delay:700ms from:input"
+    hx-target="#education-{{ education_item.id }}"
+    hx-swap="outerHTML"
+    class="grid gap-3 sm:grid-cols-2"
+  >
+    {% csrf_token %}
+    {% for field in education_form %}
+      <label class="{% if field.name == 'notes' %}sm:col-span-2{% endif %}">
+        <span class="field-label">{{ field.label }}</span>
+        {{ field }}
+        {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </label>
+    {% endfor %}
+  </form>
+  {% if include_oob and not suppress_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</article>

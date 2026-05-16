@@ -1,0 +1,30 @@
+<div id="analysis-results" class="mt-4">
+  {% if analysis %}
+    <div class="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Match</p>
+      <p class="text-3xl font-semibold text-slate-950">{{ analysis.match_percentage }}%</p>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <h2 class="mb-2 text-sm font-semibold text-emerald-800">Present</h2>
+        <div class="flex flex-wrap gap-2">
+          {% for keyword in analysis.present %}
+            <span class="keyword present">{{ keyword }}</span>
+          {% empty %}
+            <span class="empty-state">No matched keywords.</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div>
+        <h2 class="mb-2 text-sm font-semibold text-rose-800">Missing</h2>
+        <div class="flex flex-wrap gap-2">
+          {% for keyword in analysis.missing %}
+            <span class="keyword missing">{{ keyword }}</span>
+          {% empty %}
+            <span class="empty-state">No missing keywords.</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>

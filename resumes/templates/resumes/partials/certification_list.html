@@ -1,0 +1,19 @@
+{% load resume_forms %}
+<section id="certifications-section" class="editor-panel">
+  <div class="section-heading">
+    <h2>Certifications</h2>
+    <button class="icon-button" type="button" title="Add certification" hx-post="{% url 'resumes:add_certification' %}" hx-target="#certifications-section" hx-swap="outerHTML">
+      <i data-lucide="plus"></i>
+    </button>
+  </div>
+  <div class="space-y-3">
+    {% for certification in certifications %}
+      {% with certification_form=certification|certification_form %}
+        {% include "resumes/partials/certification_item.html" with suppress_oob=True %}
+      {% endwith %}
+    {% empty %}
+      <p class="empty-state">No certifications yet.</p>
+    {% endfor %}
+  </div>
+  {% if include_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</section>

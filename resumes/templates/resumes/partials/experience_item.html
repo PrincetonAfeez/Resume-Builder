@@ -1,0 +1,25 @@
+<article id="experience-{{ experience.id }}" class="item-panel">
+  <div class="item-actions">
+    <button class="icon-button" type="button" title="Move up" hx-post="{% url 'resumes:move_experience' experience.id %}" hx-vals='{"direction":"up"}' hx-target="#experiences-section" hx-swap="outerHTML"><i data-lucide="arrow-up"></i></button>
+    <button class="icon-button" type="button" title="Move down" hx-post="{% url 'resumes:move_experience' experience.id %}" hx-vals='{"direction":"down"}' hx-target="#experiences-section" hx-swap="outerHTML"><i data-lucide="arrow-down"></i></button>
+    <button class="icon-button danger-icon" type="button" title="Remove experience" hx-delete="{% url 'resumes:delete_experience' experience.id %}" hx-confirm="Remove this experience?" hx-target="#experiences-section" hx-swap="outerHTML"><i data-lucide="trash-2"></i></button>
+  </div>
+  <form
+    hx-post="{% url 'resumes:save_experience' experience.id %}"
+    hx-trigger="change delay:250ms, keyup changed delay:700ms from:input"
+    hx-target="#experience-{{ experience.id }}"
+    hx-swap="outerHTML"
+    class="grid gap-3 sm:grid-cols-2"
+  >
+    {% csrf_token %}
+    {% for field in experience_form %}
+      <label class="{% if field.name == 'current_role' %}check-row{% endif %}">
+        <span class="field-label">{{ field.label }}</span>
+        {{ field }}
+        {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </label>
+    {% endfor %}
+  </form>
+  {% include "resumes/partials/achievement_list.html" %}
+  {% if include_oob and not suppress_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</article>

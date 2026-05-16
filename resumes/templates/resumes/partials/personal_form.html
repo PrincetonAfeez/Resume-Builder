@@ -1,0 +1,22 @@
+<section id="personal-section" class="editor-panel">
+  <div class="section-heading">
+    <h2>Personal Info</h2>
+  </div>
+  <form
+    hx-post="{% url 'resumes:save_personal' %}"
+    hx-trigger="change delay:250ms, keyup changed delay:700ms from:input"
+    hx-target="#personal-section"
+    hx-swap="outerHTML"
+    class="grid gap-3 sm:grid-cols-2"
+  >
+    {% csrf_token %}
+    {% for field in personal_form %}
+      <label class="{% if field.name == 'linkedin_url' or field.name == 'portfolio_url' %}sm:col-span-1{% endif %}">
+        <span class="field-label">{{ field.label }}</span>
+        {{ field }}
+        {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </label>
+    {% endfor %}
+  </form>
+  {% if include_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</section>

@@ -1,0 +1,16 @@
+<section id="summary-section" class="editor-panel">
+  <div class="section-heading">
+    <h2>Summary</h2>
+  </div>
+  <form
+    hx-post="{% url 'resumes:save_summary' %}"
+    hx-trigger="change delay:250ms, keyup changed delay:700ms from:textarea"
+    hx-target="#summary-section"
+    hx-swap="outerHTML"
+  >
+    {% csrf_token %}
+    {{ summary_form.professional_summary }}
+    {% for error in summary_form.professional_summary.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+  </form>
+  {% if include_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</section>

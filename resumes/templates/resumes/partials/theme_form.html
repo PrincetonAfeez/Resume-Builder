@@ -1,0 +1,42 @@
+<section id="theme-section" class="editor-panel">
+  <div class="section-heading">
+    <h2>Theme</h2>
+  </div>
+  <form
+    hx-post="{% url 'resumes:save_theme' %}"
+    hx-trigger="change"
+    hx-target="#theme-section"
+    hx-swap="outerHTML"
+    class="space-y-4"
+  >
+    {% csrf_token %}
+    <div>
+      <span class="field-label">Layout</span>
+      <div class="theme-grid">
+        {% for value, label in theme_form.chosen_theme.field.choices %}
+          <label class="theme-choice">
+            <input type="radio" name="chosen_theme" value="{{ value }}" {% if theme_form.chosen_theme.value == value %}checked{% endif %}>
+            <span>{{ label }}</span>
+            <small>{{ value }}</small>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <span class="field-label">Accent</span>
+      <div class="swatch-grid">
+        {% for value, label in theme_form.accent_color.field.choices %}
+          <label class="swatch swatch-{{ value }}" title="{{ label }}">
+            <input type="radio" name="accent_color" value="{{ value }}" {% if theme_form.accent_color.value == value %}checked{% endif %}>
+            <span></span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+    <label>
+      <span class="field-label">Font pairing</span>
+      {{ theme_form.font_pairing }}
+    </label>
+  </form>
+  {% if include_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</section>

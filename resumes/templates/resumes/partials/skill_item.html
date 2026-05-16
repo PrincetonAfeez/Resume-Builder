@@ -1,0 +1,33 @@
+<article id="skill-{{ skill.id }}" class="item-panel">
+  <div class="item-actions">
+    <button class="icon-button" type="button" title="Move up" hx-post="{% url 'resumes:move_skill' skill.id %}" hx-vals='{"direction":"up"}' hx-target="#skills-section" hx-swap="outerHTML"><i data-lucide="arrow-up"></i></button>
+    <button class="icon-button" type="button" title="Move down" hx-post="{% url 'resumes:move_skill' skill.id %}" hx-vals='{"direction":"down"}' hx-target="#skills-section" hx-swap="outerHTML"><i data-lucide="arrow-down"></i></button>
+    <button class="icon-button danger-icon" type="button" title="Remove skill" hx-delete="{% url 'resumes:delete_skill' skill.id %}" hx-confirm="Remove this skill?" hx-target="#skills-section" hx-swap="outerHTML"><i data-lucide="trash-2"></i></button>
+  </div>
+  <form hx-post="{% url 'resumes:save_skill' skill.id %}" hx-trigger="change delay:250ms, keyup changed delay:700ms from:input" hx-target="#skill-{{ skill.id }}" hx-swap="outerHTML" class="grid gap-3 sm:grid-cols-[1fr_150px_180px]">
+    {% csrf_token %}
+    <label>
+      <span class="field-label">{{ skill_form.name.label }}</span>
+      {{ skill_form.name }}
+      {% for error in skill_form.name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </label>
+    <label>
+      <span class="field-label">{{ skill_form.category.label }}</span>
+      {{ skill_form.category }}
+      {% for error in skill_form.category.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </label>
+    <div>
+      <span class="field-label">{{ skill_form.proficiency.label }}</span>
+      <div class="star-control">
+        {% for choice in skill_form.proficiency %}
+          <label title="{{ choice.choice_label }} of 5">
+            {{ choice.tag }}
+            <span>{{ choice.choice_label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      {% for error in skill_form.proficiency.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </div>
+  </form>
+  {% if include_oob and not suppress_oob %}{% include "resumes/partials/oob.html" %}{% endif %}
+</article>

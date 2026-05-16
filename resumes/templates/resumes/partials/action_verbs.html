@@ -1,0 +1,14 @@
+{% if verbs %}
+  <div class="mt-2 flex flex-wrap gap-1">
+    {% for verb in verbs %}
+      <button
+        class="verb-button"
+        type="button"
+        hx-post="{% url 'resumes:save_achievement' achievement.id %}"
+        hx-vals='{"text":"{{ achievement.text|escapejs }}","replace_with":"{{ verb }}"}'
+        hx-target="#achievement-{{ achievement.id }}"
+        hx-swap="outerHTML"
+      >{{ verb }}</button>
+    {% endfor %}
+  </div>
+{% endif %}
