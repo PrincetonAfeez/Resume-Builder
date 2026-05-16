@@ -1,9 +1,10 @@
-{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="{% static 'resumes/css/app.css' %}">
+    {% if pdf_stylesheet_href %}
+      <link rel="stylesheet" href="{{ pdf_stylesheet_href }}">
+    {% endif %}
   </head>
   <body class="pdf-body">
     {% include template_name %}
