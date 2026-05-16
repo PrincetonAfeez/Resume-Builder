@@ -1,4 +1,4 @@
-#Admin for the resumes app
+# Admin for the resumes app
 
 from __future__ import annotations
 
