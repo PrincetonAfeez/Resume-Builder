@@ -43,7 +43,11 @@ def test_prod_settings_load_with_real_secret_key():
         }
     )
     result = subprocess.run(
-        [sys.executable, "-c", "import resume_builder.settings.prod; print('ok')"],
+        [
+            sys.executable,
+            "-c",
+            "import resume_builder.settings.prod as s; print(s.CACHES['default']['BACKEND'])",
+        ],
         cwd=BASE_DIR,
         env=env,
         capture_output=True,
@@ -51,4 +55,4 @@ def test_prod_settings_load_with_real_secret_key():
     )
 
     assert result.returncode == 0
-    assert "ok" in result.stdout
+    assert "DatabaseCache" in result.stdout

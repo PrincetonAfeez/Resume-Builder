@@ -13,6 +13,7 @@ target-version = ["py314"]
 profile = "black"
 line_length = 119
 skip = ["migrations"]
+extend_skip_glob = [".venv/*"]
 
 [tool.ruff]
 line-length = 119
@@ -49,6 +50,8 @@ omit = [
 ]
 
 [tool.coverage.report]
+fail_under = 90
+show_missing = true
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
@@ -66,6 +69,6 @@ check_untyped_defs = true
 django_settings_module = "resume_builder.settings.dev"
 
 [[tool.mypy.overrides]]
-module = "resumes.services.*"
+module = ["resumes.services.*", "resumes.rate_limit"]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true

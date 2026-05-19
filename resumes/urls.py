@@ -36,7 +36,6 @@ urlpatterns = [
     path("resume/certification/<int:pk>/delete/", views.delete_certification, name="delete_certification"),
     path("resume/certification/<int:pk>/move/", views.move_certification, name="move_certification"),
     path("resume/export/", views.export_resume_view, name="export"),
-    path("resume/<int:profile_id>/export/", views.export_resume_view, name="export_with_id"),
     path("resume/analyze/", views.analyze, name="analyze"),
     path("resume/analyze/run/", views.run_analyzer, name="run_analyzer"),
     path("resume/action-verbs/<int:achievement_id>/", views.action_verbs, name="action_verbs"),

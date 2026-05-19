@@ -51,3 +51,19 @@ def test_education_date_range():
     item = Education(start_date=date(2018, 9, 1), end_date=date(2022, 5, 1))
 
     assert item.date_range() == "Sep 2018 - May 2022"
+
+
+@pytest.mark.django_db
+def test_education_date_range_partial_dates():
+    start_only = Education(start_date=date(2020, 1, 1))
+    end_only = Education(end_date=date(2022, 6, 1))
+
+    assert start_only.date_range() == "Jan 2020"
+    assert end_only.date_range() == "Jun 2022"
+
+
+@pytest.mark.django_db
+def test_experience_date_range_start_only():
+    experience = Experience(start_date=date(2021, 3, 1), current_role=False)
+
+    assert experience.date_range() == "Mar 2021"

@@ -52,11 +52,11 @@ Local development uses SQLite by design for this implementation. Production is c
 
 ## Checks
 
-GitHub Actions runs two jobs: **checks** (lint, types, fast unit tests) and **linux-integration** (WeasyPrint, Playwright E2E, screenshot regen).
+GitHub Actions runs two jobs: **checks** (lint, types, fast unit tests with **≥90% coverage** on `resumes/`) and **linux-integration** (WeasyPrint, Playwright E2E, screenshot regen).
 
 ```powershell
 python manage.py check
-python -m pytest -m "not e2e and not weasyprint"
+python -m pytest -m "not e2e and not weasyprint" --cov=resumes --cov-fail-under=90
 ```
 
 `check_production_runtime` requires WeasyPrint native libraries (runs in CI **linux-integration** and on Railway release). On Windows without those libs it exits with an error.
@@ -103,7 +103,7 @@ Required Railway environment variables:
 - `CSRF_TRUSTED_ORIGINS`
 - Optional: `SENTRY_DSN`, `LOG_LEVEL`, `SENTRY_TRACES_SAMPLE_RATE`
 
-The app includes `Procfile`, `railway.toml`, `railway.prune.toml`, `nixpacks.toml` (WeasyPrint system libraries), vendored UI assets under `resumes/static/resumes/vendor/`, WhiteNoise static serving, a `/health/` endpoint, and a release command that runs `collectstatic`, migrations, and `check_production_runtime`.
+The app includes `Procfile`, `railway.toml`, `railway.prune.toml`, `nixpacks.toml` (WeasyPrint system libraries), vendored UI assets under `resumes/static/resumes/vendor/`, WhiteNoise static serving, a `/health/` endpoint, and a release command that runs `collectstatic`, migrations, `createcachetable` (shared rate-limit cache), and `check_production_runtime`.
 
 Rebuild vendor assets after UI changes: run `scripts/vendor_frontend_assets.py` for JS; rebuild Tailwind from `frontend/` (see ADR 0010 in `docs/adr/`).
 
@@ -113,10 +113,6 @@ After deploy, check **Release Logs** for:
 
 - `production_runtime weasyprint=available` — release succeeded; themed PDF export is ready
 - Failed release with `WeasyPrint native runtime is unavailable` — fix `nixpacks.toml` / platform packages and redeploy
-
-On **web service startup** (first request after deploy), look for:
-
-- `startup_check weasyprint=available`
 
 After a PDF download, **Application Logs** should show either:
 
@@ -139,7 +135,7 @@ python scripts/generate_readme_screenshots.py
 
 ## V1 Scope
 
-Included: one session profile, inline editing, undo/start over, themes (layout, accent, font), exports, analyzer, bullet warnings, action verbs, vendored frontend assets, ~82 tests (unit + E2E + WeasyPrint on Linux), ADRs in `docs/adr/` (see `resume_builder_docs.md` Document 1), and Railway prep.
+Included: one session profile, inline editing, undo/start over, themes (layout, accent, font), exports, analyzer, bullet warnings, action verbs, vendored frontend assets, ~143 tests (unit + E2E + WeasyPrint on Linux; fast job enforces ≥90% coverage on `resumes/`), ADRs in `docs/adr/` (see `resume_builder_docs.md` Document 1), and Railway prep.
 
 Deferred to v2: accounts, multiple resumes, resume duplication, share links, cover letters, job tracking, LinkedIn import, analytics, real-time collaboration, and LLM-powered features.
 

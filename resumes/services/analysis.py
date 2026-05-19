@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import warnings
 from dataclasses import dataclass
 
 from resumes.models import Profile
@@ -164,7 +165,8 @@ def analyze_job_description(profile: Profile, jd_text: str, top_n: int = 20) -> 
     keywords = extract_keywords(jd_text, top_n=top_n)
     resume_tokens = tokenize_for_matching(profile_resume_text(profile))
     present = [keyword for keyword in keywords if keyword_present_in_resume(keyword, resume_tokens)]
-    missing = [keyword for keyword in keywords if keyword not in present]
+    present_set = set(present)
+    missing = [keyword for keyword in keywords if keyword not in present_set]
     match = round((len(present) / len(keywords)) * 100) if keywords else 0
     return KeywordAnalysis(present=present, missing=missing, match_percentage=match)
 
@@ -175,16 +177,18 @@ def extract_keywords(text: str, top_n: int = 20) -> list[str]:
     except Exception:
         return _fallback_keywords(text, top_n)
 
-    vectorizer = TfidfVectorizer(
-        lowercase=True,
-        stop_words=list(STOPWORDS),
-        ngram_range=(1, 2),
-        max_features=top_n,
-    )
-    try:
-        matrix = vectorizer.fit_transform([text])
-    except ValueError:
-        return []
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+        vectorizer = TfidfVectorizer(
+            lowercase=True,
+            stop_words=list(STOPWORDS),
+            ngram_range=(1, 2),
+            max_features=top_n,
+        )
+        try:
+            matrix = vectorizer.fit_transform([text])
+        except ValueError:
+            return []
     scores = matrix.toarray()[0]
     terms = vectorizer.get_feature_names_out()
     ranked = sorted(zip(terms, scores, strict=True), key=lambda item: item[1], reverse=True)

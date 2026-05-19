@@ -22,7 +22,7 @@ jobs:
       - run: python -m isort --check-only .
       - run: python -m mypy resumes
       - run: python manage.py check
-      - run: python -m pytest -q -m "not e2e and not weasyprint"
+      - run: python -m pytest -q -m "not e2e and not weasyprint" --cov=resumes --cov-report=term-missing:skip-covered --cov-fail-under=90
 
   linux-integration:
     runs-on: ubuntu-latest

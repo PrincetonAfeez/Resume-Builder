@@ -528,7 +528,7 @@ Prefetches the resume graph and returns profile, theme, template name, experienc
 
 ---
 
-### `export_resume(profile, theme, format)`
+### `export_resume(profile, theme, export_format)`
 
 Dispatches to PDF, DOCX, or TXT export.
 
@@ -709,7 +709,6 @@ Tests cover models, forms, services, views, exports, analyzer, rate limits, prun
 | POST/DELETE | `/resume/certification/<pk>/delete/` | Delete certification |
 | POST | `/resume/certification/<pk>/move/` | Move certification |
 | GET | `/resume/export/` | Download PDF/DOCX/TXT |
-| GET | `/resume/<profile_id>/export/` | Download current-session profile only |
 | GET | `/resume/analyze/` | Analyzer page |
 | POST | `/resume/analyze/run/` | Analyzer result partial |
 | GET | `/resume/action-verbs/<achievement_id>/` | Action verb suggestions |
@@ -1299,8 +1298,8 @@ Exports fail
   │     └── wait
   ├── WeasyPrint native issue?
   │     └── check runtime logs
-  └── foreign profile ID?
-        └── use current session profile
+  └── wrong export URL?
+        └── use /resume/export/
 ```
 
 ---

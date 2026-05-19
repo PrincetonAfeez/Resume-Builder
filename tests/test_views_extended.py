@@ -199,6 +199,25 @@ def test_personal_save_sets_htmx_trigger(client):
 
 
 @pytest.mark.django_db
+def test_invalid_achievement_save_sets_invalid_trigger(client):
+    client.get("/resume/edit/")
+    experience = Experience.objects.create(profile=Profile.objects.get(), company="Acme", order=98)
+    achievement = Achievement.objects.create(experience=experience, text="Valid bullet", order=1)
+
+    response = client.post(
+        f"/resume/achievement/{achievement.id}/save/",
+        {"text": "x" * 181},
+        HTTP_HX_REQUEST="true",
+    )
+    achievement.refresh_from_db()
+
+    assert response.status_code == 200
+    assert response["HX-Trigger"] == "resume:invalid"
+    assert achievement.text == "Valid bullet"
+    assert b"180" in response.content
+
+
+@pytest.mark.django_db
 def test_invalid_experience_save_sets_invalid_trigger(client):
     client.get("/resume/edit/")
     client.post("/resume/experience/add/", HTTP_HX_REQUEST="true")

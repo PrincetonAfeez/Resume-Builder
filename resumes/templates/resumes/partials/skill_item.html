@@ -20,9 +20,9 @@
       <span class="field-label">{{ skill_form.proficiency.label }}</span>
       <div class="star-control">
         {% for choice in skill_form.proficiency %}
-          <label title="{{ choice.choice_label }} of 5">
+          <label title="{{ choice.choice_label }}">
             {{ choice.tag }}
-            <span>{{ choice.choice_label }}</span>
+            <span aria-label="{{ choice.choice_label }}">{{ choice.data.value }}</span>
           </label>
         {% endfor %}
       </div>

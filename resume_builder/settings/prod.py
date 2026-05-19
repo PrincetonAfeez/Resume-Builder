@@ -23,6 +23,14 @@ DATABASES = {
 }
 DATABASES["default"]["CONN_MAX_AGE"] = 60
 
+# Shared across Gunicorn workers; django-ratelimit uses the default cache.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "rate_limit_cache",
+    }
+}
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
 SESSION_COOKIE_SECURE = True

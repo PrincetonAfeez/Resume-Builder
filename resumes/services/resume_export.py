@@ -13,7 +13,7 @@ from django.contrib.staticfiles import finders
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.template.loader import render_to_string
 
-from resumes.models import Profile, Theme
+from resumes.models import Experience, Profile, Theme
 
 logger = logging.getLogger(__name__)
 
@@ -54,15 +54,15 @@ def build_resume_context(profile: Profile, theme: str | None = None) -> dict[str
     }
 
 
-def export_resume(profile: Profile, theme: str, format: ExportFormat) -> bytes:
+def export_resume(profile: Profile, theme: str, export_format: ExportFormat) -> bytes:
     context = build_resume_context(profile, theme)
-    if format == ExportFormat.PDF:
+    if export_format == ExportFormat.PDF:
         return export_pdf(context)
-    if format == ExportFormat.DOCX:
+    if export_format == ExportFormat.DOCX:
         return export_docx(context)
-    if format == ExportFormat.TXT:
+    if export_format == ExportFormat.TXT:
         return export_txt(context).encode("utf-8")
-    raise ValueError(f"Unsupported export format: {format}")
+    raise ValueError(f"Unsupported export format: {export_format}")
 
 
 def resolve_pdf_stylesheet_uri() -> str | None:
@@ -74,7 +74,7 @@ def resolve_pdf_stylesheet_uri() -> str | None:
 
     try:
         stored = staticfiles_storage.path("resumes/css/app.css")
-    except (AttributeError, NotImplementedError, ValueError):
+    except AttributeError, NotImplementedError, ValueError:
         stored = None
     if stored:
         path = Path(stored)
@@ -129,6 +129,10 @@ def pdf_uses_weasyprint(pdf_bytes: bytes) -> bool:
     return b"WeasyPrint" in pdf_bytes
 
 
+def _experience_heading(experience: Experience) -> str:
+    return f"{experience.title} - {experience.company}".strip(" -")
+
+
 def export_docx(context: dict[str, Any]) -> bytes:
     from docx import Document
 
@@ -155,7 +159,9 @@ def export_docx(context: dict[str, Any]) -> bytes:
     if context["experiences"]:
         document.add_heading("Experience", level=1)
     for experience in context["experiences"]:
-        document.add_heading(f"{experience.title} - {experience.company}", level=2)
+        heading = _experience_heading(experience)
+        if heading:
+            document.add_heading(heading, level=2)
         meta = " | ".join(item for item in [experience.location, experience.date_range()] if item)
         if meta:
             document.add_paragraph(meta)
@@ -221,7 +227,9 @@ def export_txt(context: dict[str, Any]) -> str:
     if context["experiences"]:
         lines.append("EXPERIENCE")
     for experience in context["experiences"]:
-        lines.append(f"{experience.title} - {experience.company}".strip(" -"))
+        heading = _experience_heading(experience)
+        if heading:
+            lines.append(heading)
         meta = " | ".join(item for item in [experience.location, experience.date_range()] if item)
         if meta:
             lines.append(meta)
@@ -300,4 +308,18 @@ def _fallback_pdf(context: dict[str, Any]) -> bytes:
 
 
 def _pdf_escape(value: str) -> str:
-    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+    normalized = value.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = normalized.replace("\\\n", "\n")
+    escaped: list[str] = []
+    for char in normalized:
+        if char == "\\":
+            escaped.append("\\\\")
+        elif char == "(":
+            escaped.append("\\(")
+        elif char == ")":
+            escaped.append("\\)")
+        elif char == "\n":
+            escaped.append("\\n")
+        else:
+            escaped.append(char)
+    return "".join(escaped)

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 from django.db import transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
@@ -22,6 +21,7 @@ from .forms import (
     ThemeForm,
 )
 from .models import Achievement, Certification, Education, Experience, Profile, Skill
+from .rate_limit import session_rate_key
 from .services.analysis import (
     action_verb_suggestions,
     analyze_job_description,
@@ -38,12 +38,14 @@ from .services.profile import (
 from .services.resume_export import CONTENT_TYPES, ExportFormat, build_resume_context, export_resume
 
 
+class CreatesOrderedProfileRow(Protocol):
+    """Callable that creates a profile-owned row with explicit order (e.g. Model.objects.create)."""
+
+    def __call__(self, *, profile: Profile, order: int) -> Education | Skill | Certification: ...
+
+
 def _profile(request: HttpRequest) -> Profile:
     return cast(Profile, request.resume_profile)  # type: ignore[attr-defined]
-
-
-def _session_rate_key(_group: str, request: HttpRequest) -> str:
-    return request.session.session_key or request.META.get("REMOTE_ADDR", "anonymous")
 
 
 def _preview_context(profile: Profile) -> dict[str, Any]:
@@ -93,6 +95,8 @@ def edit(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def start_over(request: HttpRequest) -> HttpResponse:
+    # Flush session only; do not delete the Profile row here. The old profile is
+    # orphaned until prune_stale_profiles removes it after the session expires.
     request.session.flush()
     return redirect("resumes:edit")
 
@@ -231,7 +235,7 @@ def save_achievement(request: HttpRequest, pk: int) -> HttpResponse:
         "resumes/partials/achievement_item.html",
         {
             "achievement": achievement,
-            "achievement_form": AchievementForm(instance=achievement),
+            "achievement_form": form if not saved else AchievementForm(instance=achievement),
             "warnings": check_bullet_quality(achievement.text),
         },
         saved=saved,
@@ -245,6 +249,11 @@ def delete_achievement(request: HttpRequest, pk: int) -> HttpResponse:
     capture_undo_snapshot(request, experience.profile)
     achievement.delete()
     return _render_with_preview(request, "resumes/partials/achievement_list.html", {"experience": experience})
+
+
+# Achievement HTMX targets differ by action: save swaps a single #achievement-{id} row
+# (OOB preview on the item partial); move/add/delete swap #achievements-{experience_id}
+# (OOB preview on the list partial). Both include oob.html once per response.
 
 
 @require_POST
@@ -263,7 +272,7 @@ def _list_view(
     request: HttpRequest,
     model: type[Education] | type[Skill] | type[Certification],
     template: str,
-    factory: Callable[..., Any],
+    factory: CreatesOrderedProfileRow,
 ) -> HttpResponse:
     with transaction.atomic():
         profile = _profile(request)
@@ -280,6 +289,8 @@ def _save_item(
     form_class: type[EducationForm] | type[SkillForm] | type[CertificationForm],
     template: str,
     context_name: str,
+    *,
+    item_context_key: str | None = None,
 ) -> HttpResponse:
     item = get_object_or_404(model, pk=pk, profile=_profile(request))
     form = form_class(request.POST, instance=item)
@@ -287,10 +298,11 @@ def _save_item(
     if saved:
         capture_undo_snapshot(request, item.profile)
         form.save()
+    item_key = item_context_key or context_name
     return _render_with_preview(
         request,
         template,
-        {context_name: item, f"{context_name}_form": form},
+        {item_key: item, f"{context_name}_form": form},
         saved=saved,
     )
 
@@ -327,17 +339,14 @@ def add_education(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def save_education(request: HttpRequest, pk: int) -> HttpResponse:
-    item = get_object_or_404(Education, pk=pk, profile=_profile(request))
-    form = EducationForm(request.POST, instance=item)
-    saved = form.is_valid()
-    if saved:
-        capture_undo_snapshot(request, item.profile)
-        form.save()
-    return _render_with_preview(
+    return _save_item(
         request,
+        pk,
+        Education,
+        EducationForm,
         "resumes/partials/education_item.html",
-        {"education_item": item, "education_form": form},
-        saved=saved,
+        "education",
+        item_context_key="education_item",
     )
 
 
@@ -403,12 +412,10 @@ def move_certification(request: HttpRequest, pk: int) -> HttpResponse:
     return _move_item(request, pk, Certification, "certifications", "resumes/partials/certification_list.html")
 
 
-@ratelimit(key=_session_rate_key, rate="30/h", block=True)
+@ratelimit(key=session_rate_key, rate="30/h", block=True)
 @require_GET
-def export_resume_view(request: HttpRequest, profile_id: int | None = None) -> HttpResponse:
+def export_resume_view(request: HttpRequest) -> HttpResponse:
     profile = _profile(request)
-    if profile_id and profile_id != profile.id:
-        return HttpResponseBadRequest("Profile does not belong to this session.")
     try:
         export_format = ExportFormat(request.GET.get("format", ExportFormat.PDF))
     except ValueError:
@@ -427,7 +434,7 @@ def analyze(request: HttpRequest) -> HttpResponse:
     return render(request, "resumes/analyze.html", {**_preview_context(profile), "analysis": None})
 
 
-@ratelimit(key=_session_rate_key, rate="30/h", block=True)
+@ratelimit(key=session_rate_key, rate="30/h", block=True)
 @require_POST
 def run_analyzer(request: HttpRequest) -> HttpResponse:
     profile = _profile(request)

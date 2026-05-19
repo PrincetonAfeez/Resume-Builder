@@ -23,6 +23,4 @@ class Command(BaseCommand):
 
         message = "production_runtime weasyprint=unavailable"
         logger.error(message)
-        raise CommandError(
-            "WeasyPrint native runtime is unavailable; themed PDF export will not work in production."
-        )
+        raise CommandError("WeasyPrint native runtime is unavailable; themed PDF export will not work in production.")

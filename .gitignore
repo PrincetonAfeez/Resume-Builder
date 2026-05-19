@@ -46,4 +46,5 @@ frontend/node_modules/
 Thumbs.db
 desktop.ini
 
-# Keep docs/screenshots/ tracked for README previews
+# Scratch / notes at repo root
+Resume Builder.txt

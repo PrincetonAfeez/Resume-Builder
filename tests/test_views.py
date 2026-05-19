@@ -188,19 +188,6 @@ def test_first_visit_notice_shows_once(client):
 
 
 @pytest.mark.django_db
-def test_export_rejects_foreign_profile_id(client, profile):
-    session = client.session
-    session.save()
-    profile.session_key = session.session_key
-    profile.save()
-    other = Profile.objects.create(session_key="other-session")
-
-    response = client.get(f"/resume/{other.id}/export/?format=pdf")
-
-    assert response.status_code == 400
-
-
-@pytest.mark.django_db
 @override_settings(
     CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
     RATELIMIT_ENABLE=True,

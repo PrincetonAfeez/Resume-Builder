@@ -55,9 +55,7 @@ def test_completeness_score_empty_profile():
     result = completeness_score(profile)
 
     assert result.score < 20
-    assert all(
-        not passed for label, _points, passed in result.breakdown if label != "No flagged bullets"
-    )
+    assert all(not passed for label, _points, passed in result.breakdown if label != "No flagged bullets")
 
 
 @pytest.mark.django_db
@@ -106,3 +104,44 @@ def test_profile_resume_text_includes_certifications(profile):
 
     assert "aws solutions architect" in text
     assert Certification.objects.filter(profile=profile).exists()
+
+
+def test_tokenize_for_matching_normalizes_and_splits():
+    tokens = tokenize_for_matching("Python, Django — APIs v2.0")
+
+    assert "python" in tokens
+    assert "django" in tokens
+    assert "apis" in tokens
+
+
+def test_replace_weak_opener_without_weak_opener_still_prepends_verb():
+    assert replace_weak_opener("Shipped major releases", "Delivered") == "Delivered Shipped major releases"
+
+
+def test_extract_keywords_empty_text():
+    assert extract_keywords("", top_n=5) == []
+
+
+def test_fallback_keywords_ranks_by_frequency():
+    from resumes.services.analysis import _fallback_keywords
+
+    keywords = _fallback_keywords("Python python Django django automation", top_n=2)
+
+    assert keywords == ["python", "django"]
+
+
+@pytest.mark.django_db
+def test_analyze_job_description_full_match(profile):
+    analysis = analyze_job_description(profile, "python django communication")
+
+    assert analysis.match_percentage == 100
+    assert not analysis.missing
+
+
+@pytest.mark.django_db
+def test_analyze_job_description_empty_jd(profile):
+    analysis = analyze_job_description(profile, "   ")
+
+    assert analysis.match_percentage == 0
+    assert analysis.present == []
+    assert analysis.missing == []

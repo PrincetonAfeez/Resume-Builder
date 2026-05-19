@@ -92,10 +92,15 @@ class ExperienceForm(AutosaveMixin, forms.ModelForm):
 
 
 class AchievementForm(AutosaveMixin, forms.ModelForm):
+    text = forms.CharField(
+        max_length=180,
+        widget=forms.Textarea(attrs={"rows": 2}),
+        error_messages={"max_length": "Bullet must be 180 characters or fewer."},
+    )
+
     class Meta:
         model = Achievement
         fields = ["text"]
-        widgets = {"text": forms.Textarea(attrs={"rows": 2})}
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -128,7 +133,7 @@ class EducationForm(AutosaveMixin, forms.ModelForm):
 class SkillForm(AutosaveMixin, forms.ModelForm):
     proficiency = forms.TypedChoiceField(
         coerce=int,
-        choices=[(value, "*" * value) for value in range(1, 6)],
+        choices=[(value, f"{value} of 5") for value in range(1, 6)],
         widget=forms.RadioSelect,
     )
 

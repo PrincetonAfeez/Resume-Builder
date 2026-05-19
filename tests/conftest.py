@@ -4,14 +4,10 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
 from resumes.models import Achievement, Certification, Education, Experience, Profile, Skill
-
-BASE_DIR = Path(__file__).resolve().parents[1]
-README_SCREENSHOTS = BASE_DIR / "docs" / "screenshots"
 
 
 @pytest.fixture

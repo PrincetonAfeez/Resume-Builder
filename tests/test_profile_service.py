@@ -23,6 +23,19 @@ from resumes.services.profile import (
 
 
 @pytest.mark.django_db
+def test_get_or_create_profile_reuses_existing_profile():
+    request = RequestFactory().get("/resume/edit/")
+    request.session = SessionStore()
+    request.session.save()
+    existing = Profile.objects.create(session_key=request.session.session_key)
+
+    profile = get_or_create_profile(request)
+
+    assert profile.pk == existing.pk
+    assert Profile.objects.filter(session_key=request.session.session_key).count() == 1
+
+
+@pytest.mark.django_db
 def test_get_or_create_profile_creates_session_key():
     request = RequestFactory().get("/resume/edit/")
     request.session = SessionStore()

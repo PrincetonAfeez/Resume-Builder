@@ -5,15 +5,48 @@ from __future__ import annotations
 import pytest
 
 from resumes.models import Theme
+from resumes.models import Experience
 from resumes.services.resume_export import (
+    CONTENT_TYPES,
     ExportFormat,
+    _experience_heading,
+    _pdf_escape,
     build_resume_context,
+    export_docx,
     export_resume,
     export_txt,
     pdf_uses_weasyprint,
     resolve_pdf_stylesheet_uri,
     weasyprint_runtime_available,
 )
+
+
+def test_content_types_map_all_formats():
+    assert CONTENT_TYPES[ExportFormat.PDF] == "application/pdf"
+    assert CONTENT_TYPES[ExportFormat.TXT].startswith("text/plain")
+
+
+def test_experience_heading_omits_blank_fields():
+    empty = Experience(company="", title="")
+    titled = Experience(company="Acme", title="Engineer")
+
+    assert _experience_heading(empty) == ""
+    assert _experience_heading(titled) == "Engineer - Acme"
+
+
+@pytest.mark.django_db
+def test_export_docx_skips_blank_experience_heading(profile):
+    Experience.objects.create(profile=profile, company="", title="", order=99)
+    docx = export_docx(build_resume_context(profile, "classic"))
+
+    assert docx.startswith(b"PK")
+
+
+def test_pdf_escape_handles_newlines_and_pdf_specials():
+    assert _pdf_escape("line one\nline two") == "line one\\nline two"
+    assert _pdf_escape("parens (ok)") == "parens \\(ok\\)"
+    assert _pdf_escape("back\\slash") == "back\\\\slash"
+    assert _pdf_escape("cr\r\nlf") == "cr\\nlf"
 
 
 def test_resolve_pdf_stylesheet_uri_finds_app_css():
