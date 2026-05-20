@@ -39,7 +39,7 @@ from .services.resume_export import CONTENT_TYPES, ExportFormat, build_resume_co
 
 
 class CreatesOrderedProfileRow(Protocol):
-    """Callable that creates a profile-owned row with explicit order (e.g. Model.objects.create)."""
+    """Narrow contract for add-item factories (e.g. Model.objects.create with profile=, order=)."""
 
     def __call__(self, *, profile: Profile, order: int) -> Education | Skill | Certification: ...
 
@@ -49,6 +49,7 @@ def _profile(request: HttpRequest) -> Profile:
 
 
 def _preview_context(profile: Profile) -> dict[str, Any]:
+    # build_resume_context re-queries with prefetches on each HTMX save (acceptable for V1 traffic).
     context = build_resume_context(profile)
     context["score"] = completeness_score(profile)
     context["personal_form"] = PersonalInfoForm(instance=context["profile"])

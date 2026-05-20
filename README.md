@@ -121,7 +121,7 @@ Required Railway environment variables:
 - Optional: `SENTRY_DSN`, `LOG_LEVEL`, `SENTRY_TRACES_SAMPLE_RATE`, `TRUST_X_FORWARDED_FOR` (default `true` on Railway; set `false` if the app is reachable without a trusted proxy)
 - Production adds HSTS, CSP, Referrer-Policy, and Permissions-Policy headers (see `resume_builder/settings/prod.py`)
 
-The app includes `Procfile`, `railway.toml`, `railway.prune.toml`, `nixpacks.toml` (WeasyPrint system libraries), vendored UI assets under `resumes/static/resumes/vendor/`, WhiteNoise static serving, a `/health/` endpoint, and a release command that runs `collectstatic`, migrations, `createcachetable` (shared rate-limit cache), and `check_production_runtime`.
+The app includes `Procfile`, `railway.toml`, `railway.prune.toml`, `nixpacks.toml` (WeasyPrint system libraries), vendored UI assets under `resumes/static/resumes/vendor/`, WhiteNoise static serving, a `/health/` endpoint, and a release command that runs `collectstatic`, migrations, `createcachetable` (shared rate-limit cache), and `check_production_runtime`. The prune cron uses the same Postgres database and `rate_limit_cache` table name; a successful **web** release must run first so `createcachetable` has created that table.
 
 Rebuild vendor assets after UI changes: run `scripts/vendor_frontend_assets.py` for JS; rebuild Tailwind from `frontend/` (see ADR 0010 in `docs/adr/`).
 

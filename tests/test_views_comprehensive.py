@@ -131,27 +131,34 @@ def test_export_all_formats_content_types(client, bound_profile):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    "url",
-    [
-        "/resume/experience/99999/save/",
-        "/resume/skill/99999/delete/",
-        "/resume/education/99999/move/",
-    ],
-)
-def test_foreign_session_gets_404_on_other_profile_rows(client, bound_profile, url: str):
+def test_foreign_experience_save_returns_404(client, bound_profile):
     other = Profile.objects.create(session_key="foreign")
-    if "experience" in url:
-        row = Experience.objects.create(profile=other, company="X", order=1)
-        url = url.replace("99999", str(row.pk))
-    elif "skill" in url:
-        row = Skill.objects.create(profile=other, name="X", order=1)
-        url = url.replace("99999", str(row.pk))
-    else:
-        row = Education.objects.create(profile=other, institution="X", order=1)
-        url = url.replace("99999", str(row.pk))
+    row = Experience.objects.create(profile=other, company="X", order=1)
 
-    method = "post"
-    response = getattr(client, method)(url, {"direction": "up"}, HTTP_HX_REQUEST="true")
+    response = client.post(f"/resume/experience/{row.pk}/save/", {}, HTTP_HX_REQUEST="true")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_foreign_skill_delete_returns_404(client, bound_profile):
+    other = Profile.objects.create(session_key="foreign")
+    row = Skill.objects.create(profile=other, name="X", order=1)
+
+    response = client.post(f"/resume/skill/{row.pk}/delete/", HTTP_HX_REQUEST="true")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_foreign_education_move_returns_404(client, bound_profile):
+    other = Profile.objects.create(session_key="foreign")
+    row = Education.objects.create(profile=other, institution="X", order=1)
+
+    response = client.post(
+        f"/resume/education/{row.pk}/move/",
+        {"direction": "up"},
+        HTTP_HX_REQUEST="true",
+    )
 
     assert response.status_code == 404

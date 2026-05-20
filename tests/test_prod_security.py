@@ -44,6 +44,13 @@ def test_prod_sets_hsts_and_csp():
     assert "camera=()" in _import_prod_setting("PERMISSIONS_POLICY")
 
 
+def test_dev_applies_same_csp_as_base():
+    from django.conf import settings
+
+    assert "script-src 'self'" in settings.CONTENT_SECURITY_POLICY
+    assert "camera=()" in settings.PERMISSIONS_POLICY
+
+
 @pytest.mark.django_db
 def test_prod_security_headers_on_response(client, settings):
     settings.CONTENT_SECURITY_POLICY = "default-src 'self'"

@@ -13,7 +13,7 @@ target-version = ["py314"]
 profile = "black"
 line_length = 119
 skip = ["migrations"]
-extend_skip_glob = [".venv/*"]
+extend_skip_glob = [".venv/*", ".claude/*"]
 
 [tool.ruff]
 line-length = 119

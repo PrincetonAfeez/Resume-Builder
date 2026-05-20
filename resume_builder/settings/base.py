@@ -92,3 +92,17 @@ SESSION_SAVE_EVERY_REQUEST = True
 RATELIMIT_ENABLE = True
 
 LOGIN_URL = "/resume/edit/"
+
+# Same policy in dev and prod so CSP violations surface locally (SecurityHeadersMiddleware).
+CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self'; "
+    "img-src 'self' data:; "
+    "font-src 'self'; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'"
+)
+PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"

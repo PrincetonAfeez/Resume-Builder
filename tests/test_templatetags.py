@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from resumes.models import Achievement, Certification, Education, Experience, Profile, Skill
 from resumes.templatetags.resume_forms import (
     achievement_form,
     bullet_warnings,

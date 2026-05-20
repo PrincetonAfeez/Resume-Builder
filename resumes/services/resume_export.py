@@ -32,6 +32,7 @@ CONTENT_TYPES = {
 
 
 def build_resume_context(profile: Profile, theme: str | None = None) -> dict[str, Any]:
+    """Reload profile with prefetches for preview/export (one SELECT per autosave preview)."""
     selected_theme = theme if theme in Theme.values else profile.chosen_theme
     profile = (
         Profile.objects.filter(pk=profile.pk)
@@ -309,6 +310,7 @@ def _fallback_pdf(context: dict[str, Any]) -> bytes:
 
 def _pdf_escape(value: str) -> str:
     normalized = value.replace("\r\n", "\n").replace("\r", "\n")
+    # Collapse a literal backslash before a newline (line continuation) into a real newline.
     normalized = normalized.replace("\\\n", "\n")
     escaped: list[str] = []
     for char in normalized:

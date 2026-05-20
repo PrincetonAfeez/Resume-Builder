@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from resumes.models import Theme
-from resumes.models import Experience
+from resumes.models import Experience, Theme
 from resumes.services.resume_export import (
     CONTENT_TYPES,
     ExportFormat,
