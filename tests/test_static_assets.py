@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 from django.conf import settings
-from django.test import Client
 
 BASE_DIR = Path(settings.BASE_DIR)
 
