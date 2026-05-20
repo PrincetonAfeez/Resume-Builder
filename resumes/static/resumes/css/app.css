@@ -4,6 +4,32 @@
   --muted: #64748b;
 }
 
+.completeness-progress {
+  appearance: none;
+  background: #e2e8f0;
+  border: none;
+  border-radius: 9999px;
+  display: block;
+  height: 0.5rem;
+  overflow: hidden;
+  width: 12rem;
+}
+
+.completeness-progress::-webkit-progress-bar {
+  background: #e2e8f0;
+  border-radius: 9999px;
+}
+
+.completeness-progress::-webkit-progress-value {
+  background: #059669;
+  border-radius: 9999px;
+}
+
+.completeness-progress::-moz-progress-bar {
+  background: #059669;
+  border-radius: 9999px;
+}
+
 .icon-link,
 .mini-button,
 .primary-button,

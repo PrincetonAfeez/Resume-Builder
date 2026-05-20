@@ -14,9 +14,12 @@
         <div>
           <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Completeness</p>
           <div class="mt-1 flex items-center gap-3" title="{% for label, points, passed in score.breakdown %}{{ label }}: {% if passed %}+{{ points }}{% else %}0{% endif %}; {% endfor %}">
-            <div class="h-2 w-48 overflow-hidden rounded-full bg-slate-200">
-              <div class="h-full bg-emerald-600" style="width: {{ score.score }}%"></div>
-            </div>
+            <progress
+              class="completeness-progress"
+              value="{{ score.score }}"
+              max="100"
+              aria-label="Resume completeness {{ score.score }} percent"
+            ></progress>
             <span class="text-sm font-semibold text-slate-900">{{ score.score }}/100</span>
           </div>
         </div>
