@@ -7,6 +7,7 @@ from .base import BASE_DIR
 
 DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"]
+TRUST_X_FORWARDED_FOR = False
 MIDDLEWARE = [
     middleware for middleware in MIDDLEWARE if middleware != "whitenoise.middleware.WhiteNoiseMiddleware"  # noqa: F405
 ]

@@ -18,12 +18,22 @@ def _request_with_session(*, save: bool) -> object:
     return request
 
 
-def test_client_ip_prefers_x_forwarded_for_first_hop():
+@override_settings(TRUST_X_FORWARDED_FOR=True)
+def test_client_ip_prefers_x_forwarded_for_when_trusted():
     request = RequestFactory().get("/")
     request.META["HTTP_X_FORWARDED_FOR"] = "203.0.113.10, 10.0.0.1"
     request.META["REMOTE_ADDR"] = "10.0.0.1"
 
     assert client_ip_for_rate_limit(request) == "203.0.113.10"
+
+
+@override_settings(TRUST_X_FORWARDED_FOR=False)
+def test_client_ip_ignores_x_forwarded_for_when_not_trusted():
+    request = RequestFactory().get("/")
+    request.META["HTTP_X_FORWARDED_FOR"] = "203.0.113.10"
+    request.META["REMOTE_ADDR"] = "198.51.100.4"
+
+    assert client_ip_for_rate_limit(request) == "198.51.100.4"
 
 
 def test_client_ip_falls_back_to_remote_addr():
@@ -40,8 +50,9 @@ def test_session_rate_key_uses_session_when_present():
     assert session_rate_key("export", request) == request.session.session_key
 
 
+@override_settings(TRUST_X_FORWARDED_FOR=True)
 @pytest.mark.django_db
-def test_session_rate_key_uses_client_ip_without_session():
+def test_session_rate_key_uses_forwarded_ip_without_session():
     request = _request_with_session(save=False)
     request.META["HTTP_X_FORWARDED_FOR"] = "203.0.113.55"
 

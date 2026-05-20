@@ -1,6 +1,23 @@
 # Resume Builder
 
-Session-only resume builder for quickly creating one polished resume in a browser session, then keeping it by downloading PDF, DOCX, or TXT. There are no accounts, passwords, or saved resume libraries. The session cookie is the identity.
+Session-only resume builder: one browser session, one resume, export to keep it. No accounts or saved libraries — the session cookie is identity.
+
+## At a glance
+
+| | |
+| --- | --- |
+| **Stack** | Django 6 · Python 3.14 · HTMX · Tailwind (vendored) · WeasyPrint · PostgreSQL (prod) / SQLite (dev) |
+| **Deploy** | Railway · WhiteNoise · Gunicorn · release checks for WeasyPrint |
+| **Quality** | ~143 tests · ≥90% coverage on `resumes/` · ruff · black · mypy (services) |
+| **Highlights** | HTMX autosave editor · themed PDF export · keyword coverage tool (not ATS scoring) · rate limits · session prune cron |
+
+### Screenshots
+
+| Editor | Classic theme | Modern theme | Keyword coverage |
+| --- | --- | --- | --- |
+| ![Editor](docs/screenshots/editor.png) | ![Classic](docs/screenshots/classic-theme.png) | ![Modern](docs/screenshots/modern-theme.png) | ![Analyzer](docs/screenshots/analyzer.png) |
+
+Open locally: `http://127.0.0.1:8000/resume/edit/` after [setup](#local-setup).
 
 ## Features
 
@@ -10,7 +27,7 @@ Session-only resume builder for quickly creating one polished resume in a browse
 - Three layout themes (Classic, Modern, Minimal) with accent colors and font pairings.
 - Undo last change and start over; first-visit notice explains the session-only model.
 - Export formats: PDF via WeasyPrint (uses your selected theme), DOCX via python-docx (structured plain export; themes apply to PDF only), and ATS-friendly plain text.
-- JD analyzer at `/resume/analyze/` with TF-IDF keywords, token-based present/missing groups, and match percentage.
+- **Keyword coverage** at `/resume/analyze/` — TF-IDF keywords, token-based present/missing groups, and coverage % (not an ATS or semantic match score).
 - Vendored frontend assets (Tailwind, HTMX, Lucide) served from static files, not public CDNs.
 - Rate limits on exports and analyzer runs (30/hour per session).
 - Bullet quality warnings and action verb suggestions.
@@ -101,7 +118,8 @@ Required Railway environment variables:
 - `DATABASE_URL`
 - `ALLOWED_HOSTS`
 - `CSRF_TRUSTED_ORIGINS`
-- Optional: `SENTRY_DSN`, `LOG_LEVEL`, `SENTRY_TRACES_SAMPLE_RATE`
+- Optional: `SENTRY_DSN`, `LOG_LEVEL`, `SENTRY_TRACES_SAMPLE_RATE`, `TRUST_X_FORWARDED_FOR` (default `true` on Railway; set `false` if the app is reachable without a trusted proxy)
+- Production adds HSTS, CSP, Referrer-Policy, and Permissions-Policy headers (see `resume_builder/settings/prod.py`)
 
 The app includes `Procfile`, `railway.toml`, `railway.prune.toml`, `nixpacks.toml` (WeasyPrint system libraries), vendored UI assets under `resumes/static/resumes/vendor/`, WhiteNoise static serving, a `/health/` endpoint, and a release command that runs `collectstatic`, migrations, `createcachetable` (shared rate-limit cache), and `check_production_runtime`.
 
@@ -119,13 +137,7 @@ After a PDF download, **Application Logs** should show either:
 - `pdf_export renderer=weasyprint theme=classic bytes=...` (expected on Linux with `nixpacks.toml`)
 - `pdf_export renderer=fallback theme=...` (warning; PDF is minimal text-only output)
 
-## Screenshots
-
-| Editor | Classic theme (preview) | Modern theme (preview) | JD analyzer |
-| --- | --- | --- | --- |
-| ![Editor split screen](docs/screenshots/editor.png) | ![Classic theme](docs/screenshots/classic-theme.png) | ![Modern theme](docs/screenshots/modern-theme.png) | ![JD analyzer](docs/screenshots/analyzer.png) |
-
-Regenerate after UI changes:
+Regenerate screenshots after UI changes:
 
 ```powershell
 python -m pip install playwright

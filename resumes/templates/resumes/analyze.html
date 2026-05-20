@@ -1,10 +1,13 @@
 {% extends "resumes/base.html" %}
-{% block title %}Analyze Job Description{% endblock %}
+{% block title %}Keyword coverage{% endblock %}
 {% block content %}
   <main class="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)]">
     <section class="editor-panel">
       <div class="section-heading">
-        <h1>JD Analyzer</h1>
+        <h1>Keyword coverage</h1>
+        <p class="mt-1 text-sm text-slate-600">
+          Deterministic keyword matching from the job description — not an ATS score. Synonyms and semantics are not detected.
+        </p>
       </div>
       <form
         hx-post="{% url 'resumes:run_analyzer' %}"

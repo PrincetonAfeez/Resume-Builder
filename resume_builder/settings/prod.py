@@ -36,6 +36,28 @@ SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
+# Only trust X-Forwarded-For when behind a platform proxy (Railway). Set False if exposed directly.
+TRUST_X_FORWARDED_FOR = env.bool("TRUST_X_FORWARDED_FOR", default=True)
+
+SECURE_HSTS_SECONDS = 31_536_000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=False)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self'; "
+    "img-src 'self' data:; "
+    "font-src 'self'; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'"
+)
+PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+
 
 class JsonFormatter(logging.Formatter):
     """Small JSON formatter to avoid another production dependency."""

@@ -1,8 +1,9 @@
 <div id="analysis-results" class="mt-4">
   {% if analysis %}
     <div class="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Match</p>
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Keyword coverage</p>
       <p class="text-3xl font-semibold text-slate-950">{{ analysis.match_percentage }}%</p>
+      <p class="mt-1 text-xs text-slate-500">Share of extracted JD keywords found in your resume (exact tokens).</p>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>

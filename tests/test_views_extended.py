@@ -27,7 +27,7 @@ def test_analyze_page_renders(client):
     response = client.get("/resume/analyze/")
 
     assert response.status_code == 200
-    assert b"JD Analyzer" in response.content
+    assert b"Keyword coverage" in response.content
 
 
 @pytest.mark.django_db
